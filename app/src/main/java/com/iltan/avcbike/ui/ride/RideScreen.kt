@@ -1,6 +1,7 @@
 package com.iltan.avcbike.ui.ride
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -62,6 +63,7 @@ import com.iltan.avcbike.BuildConfig
 import com.iltan.avcbike.R
 import com.iltan.avcbike.ride.RideSession
 import com.iltan.avcbike.ride.RideStatus
+import com.iltan.avcbike.ride.checkLocationSettings
 import com.iltan.avcbike.settings.RideSettings
 import com.iltan.avcbike.settings.SettingsRepository
 import com.iltan.avcbike.settings.displaySpeed
@@ -79,11 +81,17 @@ fun RideScreen(
   val state by viewModel.uiState.collectAsStateWithLifecycle()
   val context = LocalContext.current
   var locationDenied by remember { mutableStateOf(false) }
+  val locationSettingsLauncher =
+    rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+      if (result.resultCode == Activity.RESULT_OK) RideSession.start(context)
+    }
+  // Location services switched off system-wide would leave the ride on "Finding GPS" forever.
+  val startRide = { checkLocationSettings(context, onReady = { RideSession.start(context) }, onNeedsResolution = locationSettingsLauncher::launch) }
   val permissionLauncher =
     rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
       if (results[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
         locationDenied = false
-        RideSession.start(context)
+        startRide()
       } else {
         locationDenied = true
       }
@@ -95,7 +103,7 @@ fun RideScreen(
     state = state,
     locationDenied = locationDenied,
     onStart = {
-      if (hasFineLocation(context)) RideSession.start(context) else permissionLauncher.launch(ridePermissions())
+      if (hasFineLocation(context)) startRide() else permissionLauncher.launch(ridePermissions())
     },
     onStop = { RideSession.stop(context) },
     onOpenSettings = onOpenSettings,

@@ -118,11 +118,7 @@ class RideService : Service() {
 
   @Suppress("MissingPermission") // Checked in startRide().
   private fun requestLocationUpdates() {
-    val request =
-      LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, LOCATION_INTERVAL_MS)
-        .setMinUpdateIntervalMillis(LOCATION_INTERVAL_MS / 2)
-        .build()
-    fusedLocation.requestLocationUpdates(request, locationCallback, Looper.getMainLooper())
+    fusedLocation.requestLocationUpdates(locationRequest(), locationCallback, Looper.getMainLooper())
   }
 
   private fun onLocation(location: Location) {
@@ -283,6 +279,11 @@ class RideService : Service() {
 
   companion object {
     const val ACTION_STOP = "com.iltan.avcbike.action.STOP_RIDE"
+
+    /** 1 Hz GPS: fast enough to notice pulling away from a light within a couple of seconds. */
+    fun locationRequest(): LocationRequest =
+      LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, LOCATION_INTERVAL_MS).setMinUpdateIntervalMillis(LOCATION_INTERVAL_MS / 2).build()
+
     private const val TAG = "AVC"
     private const val CHANNEL_ID = "ride"
     private const val NOTIFICATION_ID = 1
