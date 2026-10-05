@@ -49,12 +49,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.iltan.avcbike.R
 import com.iltan.avcbike.ride.RideStatus
+import com.iltan.avcbike.ride.batteryExemptionIntent
+import com.iltan.avcbike.ride.isIgnoringBatteryOptimizations
 import com.iltan.avcbike.speed.RideState
 import com.iltan.avcbike.theme.AVCBikeTheme
 import com.iltan.avcbike.ui.ride.SpeedGauge
@@ -69,21 +72,24 @@ private enum class Page {
   WELCOME,
   LOCATION,
   NOTIFICATIONS,
+  BATTERY,
 }
 
-private val pages = buildList {
+private fun Context.onboardingPages() = buildList {
   add(Page.WELCOME)
   add(Page.LOCATION)
   // Before Android 13 notifications don't need a runtime permission.
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Page.NOTIFICATIONS)
+  if (!isIgnoringBatteryOptimizations()) add(Page.BATTERY)
 }
 
-private data class Permissions(val location: Boolean, val notifications: Boolean)
+private data class Permissions(val location: Boolean, val notifications: Boolean, val battery: Boolean)
 
 private fun Context.currentPermissions() =
   Permissions(
     location = granted(Manifest.permission.ACCESS_FINE_LOCATION),
     notifications = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || granted(Manifest.permission.POST_NOTIFICATIONS),
+    battery = isIgnoringBatteryOptimizations(),
   )
 
 private fun Context.granted(permission: String) = ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
@@ -91,6 +97,8 @@ private fun Context.granted(permission: String) = ContextCompat.checkSelfPermiss
 @Composable
 fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
   val context = LocalContext.current
+  // Fixed for this visit, so pages don't disappear under the rider as permissions are granted.
+  val pages = remember { context.onboardingPages() }
   var permissions by remember { mutableStateOf(context.currentPermissions()) }
   var locationAsked by remember { mutableStateOf(false) }
   // The rider may grant permissions from system settings and come back.
@@ -115,6 +123,11 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
     rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
       permissions = context.currentPermissions()
       next()
+    }
+  val batteryLauncher =
+    rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+      permissions = context.currentPermissions()
+      if (permissions.battery) next()
     }
 
   val page = pages[pagerState.currentPage]
@@ -141,6 +154,13 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
             body = stringResource(R.string.onboarding_notifications_body),
             status = if (permissions.notifications) stringResource(R.string.onboarding_notifications_granted) else null,
           )
+        Page.BATTERY ->
+          PermissionPage(
+            icon = R.drawable.ic_battery_android_full,
+            title = stringResource(R.string.onboarding_battery_title),
+            body = stringResource(R.string.onboarding_battery_body),
+            status = if (permissions.battery) stringResource(R.string.onboarding_battery_granted) else null,
+          )
       }
     }
 
@@ -157,6 +177,8 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
             { locationLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
         page == Page.NOTIFICATIONS && !permissions.notifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
           stringResource(R.string.onboarding_allow_notifications) to { notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+        page == Page.BATTERY && !permissions.battery ->
+          stringResource(R.string.onboarding_allow_battery) to { batteryLauncher.launch(context.batteryExemptionIntent()) }
         isLast -> stringResource(R.string.onboarding_lets_ride) to ::next
         else -> stringResource(R.string.onboarding_next) to ::next
       }
@@ -166,10 +188,22 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
       shape = RoundedCornerShape(20.dp),
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
     ) {
-      Text(label.uppercaseLocalized(), style = MaterialTheme.typography.titleMedium.copy(letterSpacing = MaterialTheme.typography.labelLarge.letterSpacing))
+      Text(
+        label.uppercaseLocalized(),
+        style = MaterialTheme.typography.titleMedium.copy(letterSpacing = MaterialTheme.typography.labelLarge.letterSpacing),
+        textAlign = TextAlign.Center,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
     }
     // A way past each permission page without granting it; the ride screen asks again on Start.
-    val showSkip = (page == Page.LOCATION && !permissions.location) || (page == Page.NOTIFICATIONS && !permissions.notifications)
+    val showSkip =
+      when (page) {
+        Page.WELCOME -> false
+        Page.LOCATION -> !permissions.location
+        Page.NOTIFICATIONS -> !permissions.notifications
+        Page.BATTERY -> !permissions.battery
+      }
     TextButton(onClick = ::next, enabled = showSkip, modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 4.dp)) {
       Text(if (showSkip) stringResource(R.string.onboarding_not_now) else "")
     }

@@ -55,6 +55,11 @@
     <string name="theme_dark">Koyu</string>
     <string name="language">Dil</string>
     <string name="language_system">Sistem</string>
+    <string name="section_background">Arka plan</string>
+    <string name="battery_setting_title">Pil kısıtlaması olmadan çalış</string>
+    <string name="battery_setting_on">İzin verildi. Sürüşler ekran kapalıyken de devam eder.</string>
+    <string name="battery_setting_off">Telefonun, ekran kapalıyken sürüşü durdurabilir.</string>
+    <string name="battery_setting_action">İzin ver</string>
     <string name="keep_screen_on">Sürüşte ekranı açık tut</string>
     <string name="keep_screen_on_hint">Gidona takılı telefonlar için kullanışlı. Daha fazla pil harcar.</string>
     <string name="privacy_note">AVC Bike konumunu yalnızca sürüş sırasında hızını ölçmek için kullanır. Hiçbir şey kaydedilmez, hiçbir yere gönderilmez.</string>
@@ -69,6 +74,10 @@
     <string name="onboarding_notifications_title">Sürüş durumu bir bakışta</string>
     <string name="onboarding_notifications_body">Bildirim hızını gösterir ve uygulamayı açmadan sürüşü bitirmeni sağlar.</string>
     <string name="onboarding_notifications_granted">✓ Bildirim izni verildi</string>
+    <string name="onboarding_battery_title">Sürüşler kesintisiz sürsün</string>
+    <string name="onboarding_battery_body">Bazı telefonlar pil tasarrufu için arka plandaki uygulamaları durdurur; bu da ekran kapalıyken sürüşünü yarıda kesebilir. AVC Bike\'ın pil kısıtlaması olmadan çalışmasına izin ver. Uygulama yalnızca sürüş sırasında pil kullanır.</string>
+    <string name="onboarding_battery_granted">✓ Pil kısıtlaması yok</string>
+    <string name="onboarding_allow_battery">Kısıtlamayı kaldır</string>
     <string name="onboarding_allow_location">Konuma izin ver</string>
     <string name="onboarding_allow_notifications">Bildirimlere izin ver</string>
     <string name="onboarding_next">İleri</string>

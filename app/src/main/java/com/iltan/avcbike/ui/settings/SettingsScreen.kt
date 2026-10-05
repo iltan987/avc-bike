@@ -42,10 +42,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iltan.avcbike.R
 import com.iltan.avcbike.audio.SystemMusicVolume
+import com.iltan.avcbike.ride.batteryExemptionIntent
+import com.iltan.avcbike.ride.isIgnoringBatteryOptimizations
 import com.iltan.avcbike.settings.AppLanguage
 import com.iltan.avcbike.settings.Preset
 import com.iltan.avcbike.settings.RideSettings
@@ -64,12 +67,21 @@ private const val MIN_GAP_KMH = 3f
 @Composable
 fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = settingsViewModel()) {
   val state by viewModel.uiState.collectAsStateWithLifecycle()
+  val context = LocalContext.current
+  var batteryUnrestricted by remember { mutableStateOf(context.isIgnoringBatteryOptimizations()) }
+  // Re-check when coming back from the system dialog or battery settings.
+  LifecycleResumeEffect(Unit) {
+    batteryUnrestricted = context.isIgnoringBatteryOptimizations()
+    onPauseOrDispose {}
+  }
   SettingsScreen(
     state = state,
+    batteryUnrestricted = batteryUnrestricted,
     onBack = onBack,
     onUpdate = viewModel::update,
     onPreset = viewModel::applyPreset,
     onPreviewQuiet = viewModel::previewQuietVolume,
+    onAllowBattery = { context.startActivity(context.batteryExemptionIntent()) },
     modifier = modifier,
   )
 }
@@ -77,10 +89,12 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel:
 @Composable
 internal fun SettingsScreen(
   state: SettingsUiState,
+  batteryUnrestricted: Boolean,
   onBack: () -> Unit,
   onUpdate: ((RideSettings) -> RideSettings) -> Unit,
   onPreset: (Preset) -> Unit,
   onPreviewQuiet: () -> Unit,
+  onAllowBattery: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   val settings = state.settings
@@ -186,6 +200,19 @@ internal fun SettingsScreen(
             Hint(stringResource(R.string.keep_screen_on_hint))
           }
           Switch(checked = settings.keepScreenOn, onCheckedChange = { on -> onUpdate { it.copy(keepScreenOn = on) } })
+        }
+      }
+
+      SectionHeader(stringResource(R.string.section_background))
+      SettingCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.battery_setting_title), style = MaterialTheme.typography.titleSmall)
+            Hint(stringResource(if (batteryUnrestricted) R.string.battery_setting_on else R.string.battery_setting_off))
+          }
+          if (!batteryUnrestricted) {
+            FilledTonalButton(onClick = onAllowBattery, modifier = Modifier.padding(start = 12.dp)) { Text(stringResource(R.string.battery_setting_action)) }
+          }
         }
       }
 
@@ -351,11 +378,11 @@ private fun settingsViewModel(): SettingsViewModel {
 @Preview(showBackground = true, backgroundColor = 0xFF0B0D10, widthDp = 380, heightDp = 1400)
 @Composable
 private fun SettingsScreenPreview() {
-  AVCBikeTheme(darkTheme = true) { SettingsScreen(SettingsUiState(), {}, {}, {}, {}) }
+  AVCBikeTheme(darkTheme = true) { SettingsScreen(SettingsUiState(), false, {}, {}, {}, {}, {}) }
 }
 
 @Preview(showBackground = true, widthDp = 380, heightDp = 1400)
 @Composable
 private fun SettingsScreenLightPreview() {
-  AVCBikeTheme(darkTheme = false) { SettingsScreen(SettingsUiState(settings = RideSettings(quietBelowKmh = 12f, useMph = true)), {}, {}, {}, {}) }
+  AVCBikeTheme(darkTheme = false) { SettingsScreen(SettingsUiState(settings = RideSettings(quietBelowKmh = 12f, useMph = true)), true, {}, {}, {}, {}, {}) }
 }
