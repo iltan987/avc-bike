@@ -56,6 +56,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iltan.avcbike.BuildConfig
@@ -86,8 +88,17 @@ fun RideScreen(
     rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
       if (result.resultCode == Activity.RESULT_OK) RideSession.start(context)
     }
+  val lifecycle = LocalLifecycleOwner.current.lifecycle
   // Location services switched off system-wide would leave the ride on "Finding GPS" forever.
-  val startRide = { checkLocationSettings(context, onReady = { RideSession.start(context) }, onNeedsResolution = locationSettingsLauncher::launch) }
+  // The check is asynchronous; if the rider has left the app by the time it answers, Android
+  // wouldn't let the ride start from the background, so don't try.
+  val startRide = {
+    checkLocationSettings(
+      context,
+      onReady = { if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) RideSession.start(context) },
+      onNeedsResolution = locationSettingsLauncher::launch,
+    )
+  }
   val permissionLauncher =
     rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
       if (results[Manifest.permission.ACCESS_FINE_LOCATION] == true) {

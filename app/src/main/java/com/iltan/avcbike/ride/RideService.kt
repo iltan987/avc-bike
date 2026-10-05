@@ -93,14 +93,24 @@ class RideService : Service() {
   }
 
   private fun startRide() {
+    // startForeground() comes first: a service started with startForegroundService() that stops
+    // without calling it crashes the app, even when stopping is the right thing to do.
+    createNotificationChannel()
+    val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else 0
+    try {
+      ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
+    } catch (e: RuntimeException) {
+      // Android 12+ refuses from the background (ForegroundServiceStartNotAllowedException), and
+      // 14+ without location permission (SecurityException).
+      Log.w(TAG, "Couldn't start the ride in the foreground", e)
+      stopSelf()
+      return
+    }
     if (!hasLocationPermission()) {
       Log.w(TAG, "Location permission missing, not starting ride")
       stopSelf()
       return
     }
-    createNotificationChannel()
-    val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else 0
-    ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
     running = true
 
     volume = VolumeController(SystemMusicVolume(getSystemService(AudioManager::class.java)), scope, PrefsQuietMemory(this))
