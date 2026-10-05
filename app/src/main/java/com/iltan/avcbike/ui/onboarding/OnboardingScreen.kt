@@ -155,8 +155,32 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
   }
 
   val page = pages[pagerState.currentPage]
-  Column(modifier.fillMaxSize().padding(horizontal = 24.dp)) {
-    HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { index ->
+  val isLast = pagerState.currentPage == pages.lastIndex
+  val (label, action) =
+    when {
+      page == Page.LOCATION && !permissions.location && locationAsked ->
+        stringResource(R.string.open_settings) to { context.openAppSettings() }
+      page == Page.LOCATION && !permissions.location ->
+        stringResource(R.string.onboarding_allow_location) to
+          { locationLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
+      page == Page.NOTIFICATIONS && !permissions.notifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
+        stringResource(R.string.onboarding_allow_notifications) to { notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+      page == Page.BATTERY && !permissions.battery ->
+        stringResource(R.string.onboarding_allow_battery) to ::requestBatteryExemption
+      isLast -> stringResource(R.string.onboarding_lets_ride) to ::next
+      else -> stringResource(R.string.onboarding_next) to ::next
+    }
+  // A way past each permission page without granting it; the ride screen asks again on Start.
+  val showSkip =
+    when (page) {
+      Page.WELCOME -> false
+      Page.LOCATION -> !permissions.location
+      Page.NOTIFICATIONS -> !permissions.notifications
+      Page.BATTERY -> !permissions.battery
+    }
+
+  val pager: @Composable (Modifier) -> Unit = { pagerModifier ->
+    HorizontalPager(state = pagerState, modifier = pagerModifier) { index ->
       when (pages[index]) {
         Page.WELCOME -> WelcomePage()
         Page.LOCATION ->
@@ -187,25 +211,10 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
           )
       }
     }
-
+  }
+  val controls: @Composable ColumnScope.() -> Unit = {
     PageDots(count = pages.size, current = pagerState.currentPage, modifier = Modifier.align(Alignment.CenterHorizontally))
     Spacer(Modifier.height(24.dp))
-
-    val isLast = pagerState.currentPage == pages.lastIndex
-    val (label, action) =
-      when {
-        page == Page.LOCATION && !permissions.location && locationAsked ->
-          stringResource(R.string.open_settings) to { context.openAppSettings() }
-        page == Page.LOCATION && !permissions.location ->
-          stringResource(R.string.onboarding_allow_location) to
-            { locationLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
-        page == Page.NOTIFICATIONS && !permissions.notifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
-          stringResource(R.string.onboarding_allow_notifications) to { notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
-        page == Page.BATTERY && !permissions.battery ->
-          stringResource(R.string.onboarding_allow_battery) to ::requestBatteryExemption
-        isLast -> stringResource(R.string.onboarding_lets_ride) to ::next
-        else -> stringResource(R.string.onboarding_next) to ::next
-      }
     Button(
       onClick = action,
       modifier = Modifier.fillMaxWidth().height(64.dp),
@@ -220,16 +229,24 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
         overflow = TextOverflow.Ellipsis,
       )
     }
-    // A way past each permission page without granting it; the ride screen asks again on Start.
-    val showSkip =
-      when (page) {
-        Page.WELCOME -> false
-        Page.LOCATION -> !permissions.location
-        Page.NOTIFICATIONS -> !permissions.notifications
-        Page.BATTERY -> !permissions.battery
-      }
     TextButton(onClick = ::next, enabled = showSkip, modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 4.dp)) {
       Text(if (showSkip) stringResource(R.string.onboarding_not_now) else "")
+    }
+  }
+
+  BoxWithConstraints(modifier.fillMaxSize()) {
+    if (maxWidth > maxHeight) {
+      // Sideways, the controls take a column of their own so the pages keep the full height.
+      Row(Modifier.fillMaxSize().padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+        pager(Modifier.weight(2f).fillMaxHeight())
+        Spacer(Modifier.width(24.dp))
+        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, content = controls)
+      }
+    } else {
+      Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        pager(Modifier.weight(1f))
+        controls()
+      }
     }
   }
 }
