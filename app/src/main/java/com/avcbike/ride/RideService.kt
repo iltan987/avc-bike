@@ -209,7 +209,7 @@ class RideService : Service() {
   override fun onDestroy() {
     if (running) {
       fusedLocation.removeLocationUpdates(locationCallback)
-      // No fade: the scope is cancelled right after, so put the volume back in one step.
+      // No fade: the service is going away, so put the volume back in one step.
       volume.restore(fadeMs = 0)
       running = false
       Log.i(TAG, "Ride stopped")

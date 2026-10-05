@@ -70,6 +70,11 @@ class VolumeController(private val volume: MusicVolume, private val scope: Corou
 
   private fun fadeTo(target: Int, fadeMs: Int) {
     fadeJob?.cancel()
+    if (fadeMs <= 0) {
+      // Synchronous, so it also works while the owner is shutting down and its scope is gone.
+      if (volume.current != target) set(target)
+      return
+    }
     fadeJob =
       scope.launch {
         val start = volume.current

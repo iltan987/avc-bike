@@ -1,5 +1,7 @@
 package com.avcbike.audio
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -80,6 +82,17 @@ class VolumeControllerTest {
     controller.quiet(percent = 30, fadeMs = 0)
     advanceUntilIdle()
     assertEquals(0.3f, controller.level.value, 0.001f)
+  }
+
+  @Test
+  fun zeroFade_restoresWithoutRunningCoroutines() {
+    // No scheduler advancing here: a 0 ms restore must apply immediately (used on shutdown).
+    val volume = FakeVolume(current = 10)
+    val controller = VolumeController(volume, CoroutineScope(Job().apply { cancel() }))
+    controller.quiet(percent = 40, fadeMs = 0)
+    assertEquals(4, volume.current)
+    controller.restore(fadeMs = 0)
+    assertEquals(10, volume.current)
   }
 
   @Test
