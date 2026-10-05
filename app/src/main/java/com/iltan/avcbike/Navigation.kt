@@ -18,10 +18,14 @@ fun MainNavigation(onboardingDone: Boolean, repository: SettingsRepository) {
   // Only the first value matters: the back stack is created once.
   val backStack = rememberNavBackStack(if (onboardingDone) Ride else Onboarding)
   val scope = rememberCoroutineScope()
+  // Guarded so a double tap during a screen transition can't open Settings twice or pop the last
+  // screen (NavDisplay throws on an empty back stack).
+  val openSettings = { if (backStack.lastOrNull() != Settings) backStack.add(Settings) }
+  val closeSettings = { if (backStack.lastOrNull() == Settings && backStack.size > 1) backStack.removeLastOrNull() }
 
   NavDisplay(
     backStack = backStack,
-    onBack = { backStack.removeLastOrNull() },
+    onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
     entryProvider =
       entryProvider {
         entry<Onboarding> {
@@ -34,8 +38,8 @@ fun MainNavigation(onboardingDone: Boolean, repository: SettingsRepository) {
             modifier = Modifier.safeDrawingPadding(),
           )
         }
-        entry<Ride> { RideScreen(onOpenSettings = { backStack.add(Settings) }, modifier = Modifier.safeDrawingPadding()) }
-        entry<Settings> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, modifier = Modifier.safeDrawingPadding()) }
+        entry<Ride> { RideScreen(onOpenSettings = openSettings, modifier = Modifier.safeDrawingPadding()) }
+        entry<Settings> { SettingsScreen(onBack = closeSettings, modifier = Modifier.safeDrawingPadding()) }
       },
   )
 }
