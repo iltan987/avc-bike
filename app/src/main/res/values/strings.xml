@@ -78,5 +78,7 @@
     <string name="notification_ride_starting">Starting ride…</string>
     <string name="notification_ride_title">%1$s · %2$s</string>
     <string name="notification_cruising_text">Music at your normal volume</string>
+    <string name="notification_auto_stopped_title">Ride ended</string>
+    <string name="notification_auto_stopped_text">No movement for %1$d minutes, so the ride was stopped to save battery.</string>
     <string name="notification_quiet_text">Music turned down while you\'re slow</string>
 </resources>

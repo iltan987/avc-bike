@@ -38,6 +38,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -58,9 +59,12 @@ class RideService : Service() {
   private var settings = RideSettings()
   private val machine = SpeedStateMachine(settings.toSpeedConfig())
   private var appliedState = RideState.CRUISING
-  private var lastFixMs = 0L
   private var running = false
   private var lastNotificationText: String? = null
+  private var lastNotifiedState: RideState? = null
+  private var lastNotifiedMs = 0L
+  private var lastMovingMs = 0L
+  private var lostFixJob: Job? = null
 
   private val locationCallback =
     object : LocationCallback() {
@@ -105,7 +109,8 @@ class RideService : Service() {
       }
     }
     scope.launch { volume.level.collect { level -> RideSession.update { it.copy(volumeLevel = level) } } }
-    scope.launch { watchForLostFix() }
+    lastMovingMs = SystemClock.elapsedRealtime()
+    scope.launch { watchForIdleRide() }
     if (BuildConfig.DEBUG) scope.launch { runSimulator() }
     requestLocationUpdates()
     Log.i(TAG, "Ride started")
@@ -133,7 +138,9 @@ class RideService : Service() {
 
   private fun onSample(sample: SpeedSample) {
     val snapshot = machine.onSample(sample)
-    lastFixMs = SystemClock.elapsedRealtime()
+    val now = SystemClock.elapsedRealtime()
+    if ((snapshot.smoothedKmh ?: 0f) >= MOVING_KMH) lastMovingMs = now
+    scheduleLostFixCheck()
     applyState(snapshot.state)
     volume.refresh()
     RideSession.update { it.copy(state = snapshot.state, speedKmh = snapshot.smoothedKmh) }
@@ -160,22 +167,63 @@ class RideService : Service() {
     }
   }
 
-  /** Clears the speed readout when GPS goes quiet, so the screen doesn't show a stale number. */
-  private suspend fun watchForLostFix() {
-    while (scope.isActive) {
-      delay(1_000)
-      if (SystemClock.elapsedRealtime() - lastFixMs > LOST_FIX_MS && RideSession.status.value.speedKmh != null) {
+  /**
+   * Clears the speed readout if no fix arrives for a while, so the screen doesn't show a stale
+   * number. One delayed check, re-armed by each fix, instead of a timer ticking all ride long.
+   */
+  private fun scheduleLostFixCheck() {
+    lostFixJob?.cancel()
+    lostFixJob =
+      scope.launch {
+        delay(LOST_FIX_MS)
         RideSession.update { it.copy(speedKmh = null) }
-        publish()
+        publish(force = true)
+      }
+  }
+
+  /** Ends a forgotten ride so GPS doesn't run all day: no movement for [AUTO_STOP_MS]. */
+  private suspend fun watchForIdleRide() {
+    while (scope.isActive) {
+      delay(IDLE_CHECK_MS)
+      if (SystemClock.elapsedRealtime() - lastMovingMs >= AUTO_STOP_MS) {
+        Log.i(TAG, "No movement for ${AUTO_STOP_MS / 60_000} min, stopping ride")
+        notifyAutoStopped()
+        stopSelf()
+        return
       }
     }
   }
 
-  private fun publish() {
+  private fun notifyAutoStopped() {
+    if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) return
+    val openApp =
+      PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    val notification =
+      NotificationCompat.Builder(this, CHANNEL_ID)
+        .setSmallIcon(R.drawable.ic_notification)
+        .setContentTitle(getString(R.string.notification_auto_stopped_title))
+        .setContentText(getString(R.string.notification_auto_stopped_text, AUTO_STOP_MS / 60_000))
+        .setContentIntent(openApp)
+        .setAutoCancel(true)
+        .build()
+    @Suppress("MissingPermission") // Checked with areNotificationsEnabled() above.
+    NotificationManagerCompat.from(this).notify(AUTO_STOP_NOTIFICATION_ID, notification)
+  }
+
+  /**
+   * Updates the ride notification. State changes show right away; speed-only changes at most every
+   * [NOTIFICATION_MIN_INTERVAL_MS], since redrawing a notification every second costs battery.
+   */
+  private fun publish(force: Boolean = false) {
     if (!running) return
     val text = notificationText()
     if (text == lastNotificationText) return
+    val state = RideSession.status.value.state
+    val now = SystemClock.elapsedRealtime()
+    if (!force && state == lastNotifiedState && now - lastNotifiedMs < NOTIFICATION_MIN_INTERVAL_MS) return
     lastNotificationText = text
+    lastNotifiedState = state
+    lastNotifiedMs = now
     if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
       @Suppress("MissingPermission") // areNotificationsEnabled() covers POST_NOTIFICATIONS.
       NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, buildNotification())
@@ -240,5 +288,10 @@ class RideService : Service() {
     private const val NOTIFICATION_ID = 1
     private const val LOCATION_INTERVAL_MS = 1_000L
     private const val LOST_FIX_MS = 5_000L
+    private const val NOTIFICATION_MIN_INTERVAL_MS = 5_000L
+    private const val AUTO_STOP_NOTIFICATION_ID = 2
+    private const val MOVING_KMH = 8f
+    private const val IDLE_CHECK_MS = 60_000L
+    private const val AUTO_STOP_MS = 30 * 60_000L
   }
 }
