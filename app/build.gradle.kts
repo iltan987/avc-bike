@@ -15,10 +15,26 @@ android {
         versionName = "1.0"
     }
 
+    // The release key lives outside the repo. Its location and passwords come from
+    // ~/.gradle/gradle.properties (see README), so they're never committed.
+    val releaseStoreFile = providers.gradleProperty("avcbike.release.storeFile").orNull
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = providers.gradleProperty("avcbike.release.storePassword").get()
+                keyAlias = providers.gradleProperty("avcbike.release.keyAlias").get()
+                keyPassword = providers.gradleProperty("avcbike.release.keyPassword").get()
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {
