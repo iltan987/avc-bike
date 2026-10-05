@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">AVC Bike</string>
+
+    <!-- Units -->
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_mph">mph</string>
+    <string name="speed_with_unit">%1$d %2$s</string>
+
+    <!-- Ride state -->
+    <string name="state_cruising">Cruising</string>
+    <string name="state_quiet">Quiet</string>
+    <string name="waiting_for_gps">Waiting for GPS</string>
+    <string name="stop_ride">Stop ride</string>
+
+    <!-- Ride notification -->
+    <string name="notification_channel_ride">Active ride</string>
+    <string name="notification_ride_starting">Starting ride…</string>
+    <string name="notification_ride_title">%1$s · %2$s</string>
+    <string name="notification_cruising_text">Music at your normal volume</string>
+    <string name="notification_quiet_text">Music turned down while you\'re slow</string>
 </resources>
