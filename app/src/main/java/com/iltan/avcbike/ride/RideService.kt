@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import com.iltan.avcbike.BuildConfig
 import com.iltan.avcbike.MainActivity
 import com.iltan.avcbike.R
+import com.iltan.avcbike.audio.PrefsQuietMemory
 import com.iltan.avcbike.audio.SystemMusicVolume
 import com.iltan.avcbike.audio.VolumeController
 import com.iltan.avcbike.settings.AppLanguage
@@ -102,7 +103,7 @@ class RideService : Service() {
     ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
     running = true
 
-    volume = VolumeController(SystemMusicVolume(getSystemService(AudioManager::class.java)), scope)
+    volume = VolumeController(SystemMusicVolume(getSystemService(AudioManager::class.java)), scope, PrefsQuietMemory(this))
     machine.reset()
     appliedState = RideState.CRUISING
     RideSession.update { RideStatus(active = true, volumeLevel = volume.level.value) }

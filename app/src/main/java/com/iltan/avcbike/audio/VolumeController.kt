@@ -31,8 +31,15 @@ class SystemMusicVolume(private val audioManager: AudioManager) : MusicVolume {
  * The "normal" level is whatever the rider had when we turned it down, so volume changes made
  * with the phone or intercom buttons while cruising are respected. If the rider adjusts the volume
  * while it is turned down, we leave their choice alone instead of restoring over it.
+ *
+ * While the music is down (or on its way back up) the normal level is kept in [memory], so
+ * [recover] can still restore it if the app is killed in the meantime.
  */
-class VolumeController(private val volume: MusicVolume, private val scope: CoroutineScope) {
+class VolumeController(
+  private val volume: MusicVolume,
+  private val scope: CoroutineScope,
+  private val memory: QuietMemory = QuietMemory.None,
+) {
   private var savedNormal: Int? = null
   private var lastSet: Int? = null
   private var fadeJob: Job? = null
@@ -52,7 +59,9 @@ class VolumeController(private val volume: MusicVolume, private val scope: Corou
     val normal = fadeTarget?.takeIf { fadeJob?.isActive == true } ?: volume.current
     savedNormal = normal
     lastSet = volume.current
-    fadeTo(quietLevel(normal, percent), fadeMs)
+    val quiet = quietLevel(normal, percent)
+    memory.saved = SavedQuiet(normal, quiet)
+    fadeTo(quiet, fadeMs)
   }
 
   fun restore(fadeMs: Int) {
@@ -61,9 +70,10 @@ class VolumeController(private val volume: MusicVolume, private val scope: Corou
     val userAdjusted = lastSet != null && volume.current != lastSet
     if (userAdjusted) {
       fadeJob?.cancel()
+      memory.saved = null
       return
     }
-    fadeTo(normal, fadeMs)
+    fadeTo(normal, fadeMs) { memory.saved = null }
   }
 
   /** Re-reads the system volume so [level] follows changes made outside the app. */
@@ -71,25 +81,27 @@ class VolumeController(private val volume: MusicVolume, private val scope: Corou
     if (fadeJob?.isActive != true) _level.value = fraction(volume.current)
   }
 
-  private fun fadeTo(target: Int, fadeMs: Int) {
+  /** [onDone] runs once [target] is reached, not if the fade is cancelled. */
+  private fun fadeTo(target: Int, fadeMs: Int, onDone: () -> Unit = {}) {
     fadeJob?.cancel()
     fadeTarget = target
     if (fadeMs <= 0) {
       // Synchronous, so it also works while the owner is shutting down and its scope is gone.
       if (volume.current != target) set(target)
+      onDone()
       return
     }
     fadeJob =
       scope.launch {
         val start = volume.current
         val steps = abs(target - start)
-        if (steps == 0) return@launch
-        val stepDelay = fadeMs.toLong() / steps
+        val stepDelay = if (steps == 0) 0L else fadeMs.toLong() / steps
         val direction = if (target > start) 1 else -1
         for (i in 1..steps) {
           if (stepDelay > 0) delay(stepDelay)
           set(start + i * direction)
         }
+        onDone()
       }
   }
 
@@ -102,6 +114,16 @@ class VolumeController(private val volume: MusicVolume, private val scope: Corou
   private fun fraction(index: Int) = if (volume.max == 0) 0f else index.toFloat() / volume.max
 
   companion object {
+    /**
+     * Turns the music back up after the app was killed while it was down. Leaves it alone if the
+     * rider has set a level of their own since: below our quiet level, or at or above normal.
+     */
+    fun recover(volume: MusicVolume, memory: QuietMemory) {
+      val saved = memory.saved ?: return
+      memory.saved = null
+      if (volume.current in saved.quiet until saved.normal) volume.current = saved.normal
+    }
+
     /** The quiet step for a [normal] level, never fully muting music that was audible. */
     fun quietLevel(normal: Int, percent: Int): Int {
       if (normal == 0) return 0

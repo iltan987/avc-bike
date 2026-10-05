@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iltan.avcbike.R
+import com.iltan.avcbike.audio.PrefsQuietMemory
 import com.iltan.avcbike.audio.SystemMusicVolume
 import com.iltan.avcbike.ride.batteryExemptionIntent
 import com.iltan.avcbike.ride.isIgnoringBatteryOptimizations
@@ -376,7 +377,9 @@ private fun formatSeconds(seconds: Float): String = if (seconds % 1f == 0f) seco
 @Composable
 private fun settingsViewModel(): SettingsViewModel {
   val context = LocalContext.current.applicationContext
-  return viewModel { SettingsViewModel(SettingsRepository(context), SystemMusicVolume(context.getSystemService(AudioManager::class.java))) }
+  return viewModel {
+    SettingsViewModel(SettingsRepository(context), SystemMusicVolume(context.getSystemService(AudioManager::class.java)), PrefsQuietMemory(context))
+  }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF0B0D10, widthDp = 380, heightDp = 1400)

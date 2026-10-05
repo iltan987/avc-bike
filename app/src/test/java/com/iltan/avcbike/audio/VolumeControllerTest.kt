@@ -110,6 +110,54 @@ class VolumeControllerTest {
     assertEquals(10, volume.current)
   }
 
+  private class FakeMemory(override var saved: SavedQuiet? = null) : QuietMemory
+
+  @Test
+  fun memory_holdsNormalUntilFullyRestored() = runTest {
+    val volume = FakeVolume(current = 10)
+    val memory = FakeMemory()
+    val controller = VolumeController(volume, this, memory)
+    controller.quiet(percent = 40, fadeMs = 0)
+    assertEquals(SavedQuiet(normal = 10, quiet = 4), memory.saved)
+    controller.restore(fadeMs = 3_000)
+    testScheduler.advanceTimeBy(1_000)
+    // Killed half-way back up: still worth restoring.
+    assertEquals(SavedQuiet(normal = 10, quiet = 4), memory.saved)
+    advanceUntilIdle()
+    assertEquals(null, memory.saved)
+  }
+
+  @Test
+  fun memory_clearedWhenRiderAdjustedWhileQuiet() = runTest {
+    val volume = FakeVolume(current = 10)
+    val memory = FakeMemory()
+    val controller = VolumeController(volume, this, memory)
+    controller.quiet(percent = 40, fadeMs = 0)
+    volume.current = 6
+    controller.restore(fadeMs = 0)
+    assertEquals(null, memory.saved)
+  }
+
+  @Test
+  fun recover_restoresNormalLeftOverFromKilledApp() {
+    val volume = FakeVolume(current = 4)
+    val memory = FakeMemory(SavedQuiet(normal = 10, quiet = 4))
+    VolumeController.recover(volume, memory)
+    assertEquals(10, volume.current)
+    assertEquals(null, memory.saved)
+  }
+
+  @Test
+  fun recover_leavesRidersOwnLevelAlone() {
+    for (own in listOf(2, 10, 13)) {
+      val volume = FakeVolume(current = own)
+      val memory = FakeMemory(SavedQuiet(normal = 10, quiet = 4))
+      VolumeController.recover(volume, memory)
+      assertEquals(own, volume.current)
+      assertEquals(null, memory.saved)
+    }
+  }
+
   @Test
   fun quietLevel_neverMutesAudibleMusic() {
     assertEquals(1, VolumeController.quietLevel(normal = 2, percent = 10))

@@ -3,6 +3,7 @@ package com.iltan.avcbike.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iltan.avcbike.audio.MusicVolume
+import com.iltan.avcbike.audio.QuietMemory
 import com.iltan.avcbike.audio.VolumeController
 import com.iltan.avcbike.ride.RideSession
 import com.iltan.avcbike.settings.Preset
@@ -18,8 +19,8 @@ import kotlinx.coroutines.launch
 
 data class SettingsUiState(val settings: RideSettings = RideSettings(), val rideActive: Boolean = false, val previewing: Boolean = false)
 
-class SettingsViewModel(private val repository: SettingsRepository, musicVolume: MusicVolume) : ViewModel() {
-  private val volume = VolumeController(musicVolume, viewModelScope)
+class SettingsViewModel(private val repository: SettingsRepository, musicVolume: MusicVolume, quietMemory: QuietMemory) : ViewModel() {
+  private val volume = VolumeController(musicVolume, viewModelScope, quietMemory)
   private val previewing = MutableStateFlow(false)
 
   val uiState: StateFlow<SettingsUiState> =
