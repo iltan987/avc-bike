@@ -1,0 +1,85 @@
+<resources>
+    <!-- Units -->
+    <string name="unit_kmh">km/sa</string>
+    <string name="unit_mph">mph</string>
+
+    <!-- Ride state -->
+    <string name="state_cruising">Seyirde</string>
+    <string name="state_quiet">Kısık</string>
+    <string name="waiting_for_gps">GPS bekleniyor</string>
+    <string name="stop_ride">Sürüşü bitir</string>
+    <string name="start_ride">Sürüşe başla</string>
+
+    <!-- Ride screen -->
+    <string name="settings_title">Ayarlar</string>
+    <string name="status_ready">Sürüşe hazır</string>
+    <string name="status_waiting_for_gps">GPS aranıyor…</string>
+    <string name="status_cruising">Seyirde · normal ses</string>
+    <string name="status_quiet">Kısık · ses %%%1$d</string>
+    <string name="thresholds_summary">%1$d altında kısılır · %2$d üstünde açılır (%3$s)</string>
+    <string name="volume_percent">SES %%%1$d</string>
+    <string name="volume_idle">SES –</string>
+    <string name="gauge_description">Hız %1$s %2$s, müzik sesi %%%3$d</string>
+    <string name="location_denied">Hızını ölçmek için konum izni gerekiyor.</string>
+    <string name="open_settings">Ayarları aç</string>
+
+    <!-- Settings screen -->
+    <string name="back">Geri</string>
+    <string name="section_riding_style">Sürüş tarzı</string>
+    <string name="section_speeds">Hızlar</string>
+    <string name="section_volume">Ses</string>
+    <string name="section_timing">Zamanlama</string>
+    <string name="section_display">Görünüm</string>
+    <string name="preset_city">Şehir</string>
+    <string name="preset_touring">Uzun yol</string>
+    <string name="preset_custom">Özel</string>
+    <string name="preset_custom_hint">Kendi ayarın</string>
+    <string name="quiet_below">Kısma eşiği</string>
+    <string name="back_above">Açma eşiği</string>
+    <string name="speed_range_hint">İki eşik arasındaki fark, dur-kalk trafikte sesin sürekli inip çıkmasını önler.</string>
+    <string name="quiet_volume">Kısık ses seviyesi</string>
+    <string name="quiet_volume_value">Sesinin %%%1$d kadarı</string>
+    <string name="try_quiet">Dene</string>
+    <string name="try_quiet_playing">Dinle…</string>
+    <string name="try_quiet_disabled">Burada denemek için önce sürüşü bitir.</string>
+    <string name="fade_time">Geçiş süresi</string>
+    <string name="quiet_delay">Kısmadan önce bekle</string>
+    <string name="quiet_delay_hint">Müziğin kısılması için ne kadar süre yavaş gitmen gerektiği.</string>
+    <string name="resume_delay">Açmadan önce bekle</string>
+    <string name="instant">Anında</string>
+    <string name="seconds_value">%1$s sn</string>
+    <string name="units">Hız birimi</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">Sistem</string>
+    <string name="theme_light">Açık</string>
+    <string name="theme_dark">Koyu</string>
+    <string name="language">Dil</string>
+    <string name="language_system">Sistem</string>
+    <string name="keep_screen_on">Sürüşte ekranı açık tut</string>
+    <string name="keep_screen_on_hint">Gidona takılı telefonlar için kullanışlı. Daha fazla pil harcar.</string>
+    <string name="privacy_note">AVC Bike konumunu yalnızca sürüş sırasında hızını ölçmek için kullanır. Hiçbir şey kaydedilmez, hiçbir yere gönderilmez.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Durduğunu bilen müzik</string>
+    <string name="onboarding_welcome_body">AVC Bike yavaşladığında ya da durduğunda müziğinin sesini kısar, yeniden hızlandığında geri açar. Spotify, YouTube Music ve diğer tüm müzik uygulamalarıyla çalışır.</string>
+    <string name="onboarding_location_title">Sadece hızın, başka bir şey değil</string>
+    <string name="onboarding_location_body">GPS yalnızca sürüş sırasında, sadece hızını ölçmek için kullanılır. Konumun asla kaydedilmez ve hiçbir yere gönderilmez. Hızın ölçülebilmesi için “Tam” konumu seç.</string>
+    <string name="onboarding_location_granted">✓ Konum izni verildi</string>
+    <string name="onboarding_location_denied">Tam konum olmadan uygulama hızını ölçemez. İzni Ayarlar\'dan verebilirsin.</string>
+    <string name="onboarding_notifications_title">Sürüş durumu bir bakışta</string>
+    <string name="onboarding_notifications_body">Bildirim hızını gösterir ve uygulamayı açmadan sürüşü bitirmeni sağlar.</string>
+    <string name="onboarding_notifications_granted">✓ Bildirim izni verildi</string>
+    <string name="onboarding_allow_location">Konuma izin ver</string>
+    <string name="onboarding_allow_notifications">Bildirimlere izin ver</string>
+    <string name="onboarding_next">İleri</string>
+    <string name="onboarding_lets_ride">Hadi sürelim</string>
+    <string name="onboarding_not_now">Şimdi değil</string>
+
+    <!-- Ride notification -->
+    <string name="notification_channel_ride">Aktif sürüş</string>
+    <string name="notification_ride_starting">Sürüş başlıyor…</string>
+    <string name="notification_cruising_text">Müzik normal seviyede</string>
+    <string name="notification_auto_stopped_title">Sürüş bitti</string>
+    <string name="notification_auto_stopped_text">%1$d dakikadır hareket yok; pil tasarrufu için sürüş durduruldu.</string>
+    <string name="notification_quiet_text">Yavaşken müzik kısıldı</string>
+</resources>

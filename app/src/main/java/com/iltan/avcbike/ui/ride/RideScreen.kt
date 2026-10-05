@@ -71,6 +71,7 @@ import com.iltan.avcbike.settings.speedUnitLabel
 import com.iltan.avcbike.speed.RideState
 import com.iltan.avcbike.theme.AVCBikeTheme
 import com.iltan.avcbike.theme.stateColor
+import com.iltan.avcbike.ui.uppercaseLocalized
 
 @Composable
 fun RideScreen(
@@ -195,7 +196,7 @@ private fun StatusChip(status: RideStatus, quietPercent: Int, accent: Color) {
     Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
       Box(Modifier.size(8.dp).background(accent, CircleShape))
       Spacer(Modifier.width(10.dp))
-      Text(label.uppercase(), style = MaterialTheme.typography.labelLarge, color = accent)
+      Text(label.uppercaseLocalized(), style = MaterialTheme.typography.labelLarge, color = accent)
     }
   }
 }
@@ -218,7 +219,7 @@ private fun RideButton(active: Boolean, onStart: () -> Unit, onStop: () -> Unit)
     Icon(painterResource(if (active) R.drawable.ic_stop else R.drawable.ic_play_arrow), contentDescription = null, modifier = Modifier.size(28.dp))
     Spacer(Modifier.width(10.dp))
     Text(
-      text = stringResource(if (active) R.string.stop_ride else R.string.start_ride).uppercase(),
+      text = stringResource(if (active) R.string.stop_ride else R.string.start_ride).uppercaseLocalized(),
       style = MaterialTheme.typography.titleMedium.copy(letterSpacing = MaterialTheme.typography.labelLarge.letterSpacing),
     )
   }

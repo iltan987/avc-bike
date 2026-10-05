@@ -25,6 +25,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+    androidResources {
+      // Lists English and Turkish in Android 13+ per-app language settings.
+      generateLocaleConfig = true
+    }
     buildFeatures {
       compose = true
       aidl = false
@@ -51,6 +55,7 @@ dependencies {
   // Core Android dependencies
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.core.splashscreen)
+  implementation(libs.androidx.appcompat)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.activity.compose)
 

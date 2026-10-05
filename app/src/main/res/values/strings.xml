@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">AVC Bike</string>
+    <string name="app_name" translatable="false">AVC Bike</string>
 
     <!-- Units -->
     <string name="unit_kmh">km/h</string>
     <string name="unit_mph">mph</string>
-    <string name="speed_with_unit">%1$d %2$s</string>
+    <string name="speed_with_unit" translatable="false">%1$d %2$s</string>
 
     <!-- Ride state -->
     <string name="state_cruising">Cruising</string>
@@ -37,7 +37,7 @@
     <string name="preset_touring">Touring</string>
     <string name="preset_custom">Custom</string>
     <string name="preset_custom_hint">Your own</string>
-    <string name="preset_summary">%1$d → %2$d %3$s</string>
+    <string name="preset_summary" translatable="false">%1$d → %2$d %3$s</string>
     <string name="quiet_below">Quiet below</string>
     <string name="back_above">Back above</string>
     <string name="speed_range_hint">The gap between the two stops the music from bouncing in stop-and-go traffic.</string>
@@ -57,6 +57,11 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="language">Language</string>
+    <string name="language_system">System</string>
+    <!-- Each language is named in itself, so riders can find theirs whatever the app is showing. -->
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_turkish" translatable="false">Türkçe</string>
     <string name="keep_screen_on">Keep screen on while riding</string>
     <string name="keep_screen_on_hint">Handy with a handlebar mount. Uses more battery.</string>
     <string name="privacy_note">AVC Bike uses your location only to measure speed during a ride. Nothing is stored or sent anywhere.</string>
@@ -80,7 +85,7 @@
     <!-- Ride notification -->
     <string name="notification_channel_ride">Active ride</string>
     <string name="notification_ride_starting">Starting ride…</string>
-    <string name="notification_ride_title">%1$s · %2$s</string>
+    <string name="notification_ride_title" translatable="false">%1$s · %2$s</string>
     <string name="notification_cruising_text">Music at your normal volume</string>
     <string name="notification_auto_stopped_title">Ride ended</string>
     <string name="notification_auto_stopped_text">No movement for %1$d minutes, so the ride was stopped to save battery.</string>

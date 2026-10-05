@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iltan.avcbike.R
 import com.iltan.avcbike.audio.SystemMusicVolume
+import com.iltan.avcbike.settings.AppLanguage
 import com.iltan.avcbike.settings.Preset
 import com.iltan.avcbike.settings.RideSettings
 import com.iltan.avcbike.settings.SettingsRepository
@@ -53,6 +54,7 @@ import com.iltan.avcbike.settings.ThemeMode
 import com.iltan.avcbike.settings.displaySpeed
 import com.iltan.avcbike.settings.speedUnitLabel
 import com.iltan.avcbike.theme.AVCBikeTheme
+import com.iltan.avcbike.ui.uppercaseLocalized
 import kotlin.math.roundToInt
 
 private const val MIN_KMH = 5f
@@ -149,6 +151,19 @@ internal fun SettingsScreen(
 
       SectionHeader(stringResource(R.string.section_display))
       SettingCard {
+        // Stored by AndroidX rather than DataStore; changing it recreates the screen in the new language.
+        var language by remember { mutableStateOf(AppLanguage.current()) }
+        ChoiceSetting(
+          title = stringResource(R.string.language),
+          options = AppLanguage.entries,
+          selected = language,
+          label = { stringResource(languageLabel(it)) },
+          onSelect = {
+            language = it
+            it.apply()
+          },
+        )
+        Spacer(Modifier.height(20.dp))
         ChoiceSetting(
           title = stringResource(R.string.theme),
           options = ThemeMode.entries,
@@ -242,6 +257,13 @@ private fun <T> ChoiceSetting(title: String, options: List<T>, selected: T, labe
   }
 }
 
+private fun languageLabel(language: AppLanguage) =
+  when (language) {
+    AppLanguage.SYSTEM -> R.string.language_system
+    AppLanguage.ENGLISH -> R.string.language_english
+    AppLanguage.TURKISH -> R.string.language_turkish
+  }
+
 private fun themeLabel(mode: ThemeMode) =
   when (mode) {
     ThemeMode.SYSTEM -> R.string.theme_system
@@ -290,7 +312,7 @@ private fun SliderSetting(
 @Composable
 private fun LabeledValue(label: String, value: String, modifier: Modifier = Modifier, alignEnd: Boolean = false) {
   Column(modifier, horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
-    Text(label.uppercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(label.uppercaseLocalized(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Text(value, style = MaterialTheme.typography.headlineMedium)
   }
 }
@@ -298,7 +320,7 @@ private fun LabeledValue(label: String, value: String, modifier: Modifier = Modi
 @Composable
 private fun SectionHeader(text: String) {
   Text(
-    text.uppercase(),
+    text.uppercaseLocalized(),
     style = MaterialTheme.typography.labelLarge,
     color = MaterialTheme.colorScheme.primary,
     modifier = Modifier.padding(top = 24.dp, bottom = 10.dp, start = 4.dp),

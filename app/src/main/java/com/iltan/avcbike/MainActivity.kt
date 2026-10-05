@@ -2,10 +2,10 @@ package com.iltan.avcbike
 
 import android.graphics.Color
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -20,7 +20,8 @@ import com.iltan.avcbike.settings.SettingsRepository
 import com.iltan.avcbike.settings.ThemeMode
 import com.iltan.avcbike.theme.AVCBikeTheme
 
-class MainActivity : ComponentActivity() {
+// AppCompatActivity for the per-app language API on Android 12 and older.
+class MainActivity : AppCompatActivity() {
   private var settingsLoaded = false
 
   override fun onCreate(savedInstanceState: Bundle?) {

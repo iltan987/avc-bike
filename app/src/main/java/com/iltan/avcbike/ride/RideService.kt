@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
@@ -25,6 +26,7 @@ import com.iltan.avcbike.MainActivity
 import com.iltan.avcbike.R
 import com.iltan.avcbike.audio.SystemMusicVolume
 import com.iltan.avcbike.audio.VolumeController
+import com.iltan.avcbike.settings.AppLanguage
 import com.iltan.avcbike.settings.RideSettings
 import com.iltan.avcbike.settings.SettingsRepository
 import com.iltan.avcbike.settings.displaySpeed
@@ -72,6 +74,10 @@ class RideService : Service() {
         result.locations.forEach(::onLocation)
       }
     }
+
+  override fun attachBaseContext(base: Context) {
+    super.attachBaseContext(AppLanguage.wrap(base))
+  }
 
   override fun onBind(intent: Intent?): IBinder? = null
 

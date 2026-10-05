@@ -54,6 +54,7 @@ import com.iltan.avcbike.R
 import com.iltan.avcbike.theme.AVCBikeTheme
 import com.iltan.avcbike.ui.ride.SpeedGauge
 import com.iltan.avcbike.ui.ride.openAppSettings
+import com.iltan.avcbike.ui.uppercaseLocalized
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -158,7 +159,7 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
       shape = RoundedCornerShape(20.dp),
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
     ) {
-      Text(label.uppercase(), style = MaterialTheme.typography.titleMedium.copy(letterSpacing = MaterialTheme.typography.labelLarge.letterSpacing))
+      Text(label.uppercaseLocalized(), style = MaterialTheme.typography.titleMedium.copy(letterSpacing = MaterialTheme.typography.labelLarge.letterSpacing))
     }
     // A way past each permission page without granting it; the ride screen asks again on Start.
     val showSkip = (page == Page.LOCATION && !permissions.location) || (page == Page.NOTIFICATIONS && !permissions.notifications)

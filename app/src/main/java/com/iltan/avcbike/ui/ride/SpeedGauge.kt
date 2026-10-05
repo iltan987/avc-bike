@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.iltan.avcbike.R
 import com.iltan.avcbike.theme.AVCBikeTheme
 import com.iltan.avcbike.theme.SpeedNumerals
+import com.iltan.avcbike.ui.uppercaseLocalized
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -93,7 +94,7 @@ fun SpeedGauge(
         style = if (speed == null) numerals.copy(fontWeight = FontWeight.Thin) else numerals,
         color = if (active && speed != null) colors.onSurface else colors.onSurfaceVariant,
       )
-      Text(text = unitLabel.uppercase(), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
+      Text(text = unitLabel.uppercaseLocalized(), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
       Spacer(Modifier.height(20.dp))
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
         Icon(painterResource(R.drawable.ic_volume_up), contentDescription = null, tint = arcColor, modifier = Modifier.size(18.dp))
