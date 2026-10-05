@@ -76,6 +76,21 @@ class VolumeControllerTest {
   }
 
   @Test
+  fun quietDuringFadeUp_keepsOriginalNormal() = runTest {
+    // Stop-and-go: slowing again before the music has fully come back must not lower "normal".
+    val volume = FakeVolume(current = 10)
+    val controller = controller(volume)
+    controller.quiet(percent = 40, fadeMs = 0)
+    controller.restore(fadeMs = 6_000)
+    testScheduler.advanceTimeBy(2_500) // part-way back up
+    assertTrue(volume.current in 5..9)
+    controller.quiet(percent = 40, fadeMs = 0)
+    assertEquals(4, volume.current)
+    controller.restore(fadeMs = 0)
+    assertEquals(10, volume.current)
+  }
+
+  @Test
   fun level_reportsFractionOfMax() = runTest {
     val volume = FakeVolume(max = 10, current = 10)
     val controller = controller(volume)

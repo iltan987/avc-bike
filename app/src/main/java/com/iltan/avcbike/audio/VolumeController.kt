@@ -36,6 +36,7 @@ class VolumeController(private val volume: MusicVolume, private val scope: Corou
   private var savedNormal: Int? = null
   private var lastSet: Int? = null
   private var fadeJob: Job? = null
+  private var fadeTarget: Int? = null
 
   private val _level = MutableStateFlow(fraction(volume.current))
   /** Current music volume as a fraction of the maximum, for the UI. */
@@ -46,9 +47,11 @@ class VolumeController(private val volume: MusicVolume, private val scope: Corou
 
   fun quiet(percent: Int, fadeMs: Int) {
     if (savedNormal != null) return
-    val normal = volume.current
+    // Slowing down again while the music is still fading back up: the normal level is where that
+    // fade was heading, not the half-way level it has reached.
+    val normal = fadeTarget?.takeIf { fadeJob?.isActive == true } ?: volume.current
     savedNormal = normal
-    lastSet = normal
+    lastSet = volume.current
     fadeTo(quietLevel(normal, percent), fadeMs)
   }
 
@@ -70,6 +73,7 @@ class VolumeController(private val volume: MusicVolume, private val scope: Corou
 
   private fun fadeTo(target: Int, fadeMs: Int) {
     fadeJob?.cancel()
+    fadeTarget = target
     if (fadeMs <= 0) {
       // Synchronous, so it also works while the owner is shutting down and its scope is gone.
       if (volume.current != target) set(target)
