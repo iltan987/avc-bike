@@ -17,8 +17,10 @@ private val DarkColorScheme =
     onPrimaryContainer = EmberPale,
     secondary = Teal,
     onSecondary = TealNight,
-    secondaryContainer = TealDeep,
-    onSecondaryContainer = TealPale,
+    // Containers stay neutral: sliders, segmented buttons and tonal buttons use them, and teal is
+    // reserved for the "quiet" state.
+    secondaryContainer = Carbon4,
+    onSecondaryContainer = Chalk,
     background = Ink,
     onBackground = Chalk,
     surface = Ink,
@@ -43,8 +45,8 @@ private val LightColorScheme =
     onPrimaryContainer = EmberNight,
     secondary = TealDark,
     onSecondary = Color.White,
-    secondaryContainer = TealMist,
-    onSecondaryContainer = TealNight,
+    secondaryContainer = Paper3,
+    onSecondaryContainer = Graphite,
     background = Paper,
     onBackground = Graphite,
     surface = Paper,
