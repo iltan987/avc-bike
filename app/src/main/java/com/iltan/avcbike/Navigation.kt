@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.iltan.avcbike.settings.SettingsRepository
 import com.iltan.avcbike.ui.onboarding.OnboardingScreen
@@ -26,6 +28,9 @@ fun MainNavigation(onboardingDone: Boolean, repository: SettingsRepository) {
   NavDisplay(
     backStack = backStack,
     onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
+    // Each screen gets its own ViewModels, cleared when the screen leaves the back stack (the
+    // default would keep them for the whole activity).
+    entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator(), rememberViewModelStoreNavEntryDecorator()),
     entryProvider =
       entryProvider {
         entry<Onboarding> {
