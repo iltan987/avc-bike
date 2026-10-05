@@ -7,6 +7,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.avcbike.ui.ride.RideScreen
+import com.avcbike.ui.settings.SettingsScreen
 
 @Composable
 fun MainNavigation() {
@@ -15,6 +16,10 @@ fun MainNavigation() {
   NavDisplay(
     backStack = backStack,
     onBack = { backStack.removeLastOrNull() },
-    entryProvider = entryProvider { entry<Ride> { RideScreen(onOpenSettings = {}, modifier = Modifier.safeDrawingPadding()) } },
+    entryProvider =
+      entryProvider {
+        entry<Ride> { RideScreen(onOpenSettings = { backStack.add(Settings) }, modifier = Modifier.safeDrawingPadding()) }
+        entry<Settings> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, modifier = Modifier.safeDrawingPadding()) }
+      },
   )
 }

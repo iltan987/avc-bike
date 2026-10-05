@@ -26,6 +26,37 @@
     <string name="location_denied">Location is needed to measure your speed.</string>
     <string name="open_settings">Open settings</string>
 
+    <!-- Settings screen -->
+    <string name="back">Back</string>
+    <string name="section_riding_style">Riding style</string>
+    <string name="section_speeds">Speeds</string>
+    <string name="section_volume">Volume</string>
+    <string name="section_timing">Timing</string>
+    <string name="section_display">Display</string>
+    <string name="preset_city">City</string>
+    <string name="preset_touring">Touring</string>
+    <string name="preset_custom">Custom</string>
+    <string name="preset_custom_hint">Your own</string>
+    <string name="preset_summary">%1$d → %2$d %3$s</string>
+    <string name="quiet_below">Quiet below</string>
+    <string name="back_above">Back above</string>
+    <string name="speed_range_hint">The gap between the two stops the music from bouncing in stop-and-go traffic.</string>
+    <string name="quiet_volume">Quiet volume</string>
+    <string name="quiet_volume_value">%1$d%% of yours</string>
+    <string name="try_quiet">Try it</string>
+    <string name="try_quiet_playing">Listen…</string>
+    <string name="try_quiet_disabled">Stop the ride to try the quiet volume here.</string>
+    <string name="fade_time">Fade time</string>
+    <string name="quiet_delay">Wait before turning down</string>
+    <string name="quiet_delay_hint">How long you need to be slow before the music drops.</string>
+    <string name="resume_delay">Wait before turning back up</string>
+    <string name="instant">Instant</string>
+    <string name="seconds_value">%1$s s</string>
+    <string name="units">Speed units</string>
+    <string name="keep_screen_on">Keep screen on while riding</string>
+    <string name="keep_screen_on_hint">Handy with a handlebar mount. Uses more battery.</string>
+    <string name="privacy_note">AVC Bike uses your location only to measure speed during a ride. Nothing is stored or sent anywhere.</string>
+
     <!-- Ride notification -->
     <string name="notification_channel_ride">Active ride</string>
     <string name="notification_ride_starting">Starting ride…</string>
