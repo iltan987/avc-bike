@@ -57,6 +57,22 @@
     <string name="keep_screen_on_hint">Handy with a handlebar mount. Uses more battery.</string>
     <string name="privacy_note">AVC Bike uses your location only to measure speed during a ride. Nothing is stored or sent anywhere.</string>
 
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Music that knows when you stop</string>
+    <string name="onboarding_welcome_body">AVC Bike turns your music down when you slow down or stop, and brings it back as you pull away. Works with Spotify, YouTube Music and any other player.</string>
+    <string name="onboarding_location_title">Your speed, nothing else</string>
+    <string name="onboarding_location_body">GPS is used only while a ride is running, just to measure your speed. Your location is never stored or sent anywhere. Choose “Precise” so speed can be measured.</string>
+    <string name="onboarding_location_granted">✓ Location allowed</string>
+    <string name="onboarding_location_denied">Without precise location the app can\'t measure your speed. You can allow it in Settings.</string>
+    <string name="onboarding_notifications_title">Ride status at a glance</string>
+    <string name="onboarding_notifications_body">A notification shows your speed and lets you stop the ride without opening the app.</string>
+    <string name="onboarding_notifications_granted">✓ Notifications allowed</string>
+    <string name="onboarding_allow_location">Allow location</string>
+    <string name="onboarding_allow_notifications">Allow notifications</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_lets_ride">Let\'s ride</string>
+    <string name="onboarding_not_now">Not now</string>
+
     <!-- Ride notification -->
     <string name="notification_channel_ride">Active ride</string>
     <string name="notification_ride_starting">Starting ride…</string>
