@@ -22,7 +22,7 @@
     <string name="thresholds_summary">Quiet below %1$d · back above %2$d %3$s</string>
     <string name="volume_percent">VOL %1$d%%</string>
     <string name="volume_idle">VOL –</string>
-    <string name="gauge_description">Speed %1$s %2$s, music volume %3$d percent</string>
+    <string name="gauge_description">Speed %1$s %2$s, music volume %3$d%%</string>
     <string name="location_denied">Location is needed to measure your speed.</string>
     <string name="open_settings">Open settings</string>
 

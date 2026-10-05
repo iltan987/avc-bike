@@ -147,7 +147,7 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
         page == Page.LOCATION && !permissions.location ->
           stringResource(R.string.onboarding_allow_location) to
             { locationLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
-        page == Page.NOTIFICATIONS && !permissions.notifications ->
+        page == Page.NOTIFICATIONS && !permissions.notifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
           stringResource(R.string.onboarding_allow_notifications) to { notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
         isLast -> stringResource(R.string.onboarding_lets_ride) to ::next
         else -> stringResource(R.string.onboarding_next) to ::next
