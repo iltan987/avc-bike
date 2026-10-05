@@ -5,7 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.avcbike.R
 import com.avcbike.theme.AVCBikeTheme
 import com.avcbike.theme.SpeedNumerals
@@ -66,7 +67,10 @@ fun SpeedGauge(
   val volumePercent = (volumeLevel * 100).roundToInt()
   val description = stringResource(R.string.gauge_description, speed?.toString() ?: "–", unitLabel, volumePercent)
 
-  Box(modifier.aspectRatio(1f).semantics { contentDescription = description }, contentAlignment = Alignment.Center) {
+  BoxWithConstraints(modifier.aspectRatio(1f).semantics { contentDescription = description }, contentAlignment = Alignment.Center) {
+    // Numerals scale with the gauge so they clear the tick marks at any size.
+    val numeralSize = (maxWidth.value * 0.28f).sp
+    val numerals = SpeedNumerals.copy(fontSize = numeralSize, lineHeight = numeralSize)
     Canvas(Modifier.fillMaxSize()) {
       val stroke = 18.dp.toPx()
       val inset = stroke * 1.5f
@@ -86,7 +90,7 @@ fun SpeedGauge(
       Text(
         text = speed?.toString() ?: "–",
         // No reading yet: a thin dash instead of heavy numerals.
-        style = if (speed == null) SpeedNumerals.copy(fontWeight = FontWeight.Thin) else SpeedNumerals,
+        style = if (speed == null) numerals.copy(fontWeight = FontWeight.Thin) else numerals,
         color = if (active && speed != null) colors.onSurface else colors.onSurfaceVariant,
       )
       Text(text = unitLabel.uppercase(), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
