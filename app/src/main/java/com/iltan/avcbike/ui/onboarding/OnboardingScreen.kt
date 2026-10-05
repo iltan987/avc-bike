@@ -41,6 +41,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -82,6 +84,8 @@ private fun Context.onboardingPages() = buildList {
   if (!isIgnoringBatteryOptimizations()) add(Page.BATTERY)
 }
 
+private val pagesSaver = listSaver<List<Page>, String>(save = { pages -> pages.map { it.name } }, restore = { names -> names.map(Page::valueOf) })
+
 private data class Permissions(val location: Boolean, val notifications: Boolean, val battery: Boolean)
 
 private fun Context.currentPermissions() =
@@ -97,9 +101,11 @@ private fun Context.granted(permission: String) = ContextCompat.checkSelfPermiss
 fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
   val context = LocalContext.current
   // Fixed for this visit, so pages don't disappear under the rider as permissions are granted.
-  val pages = remember { context.onboardingPages() }
+  // Saved too: the pager restores its page after rotation or a theme change, and a shorter list
+  // recomputed then would no longer have that page.
+  val pages = rememberSaveable(saver = pagesSaver) { context.onboardingPages() }
   var permissions by remember { mutableStateOf(context.currentPermissions()) }
-  var locationAsked by remember { mutableStateOf(false) }
+  var locationAsked by rememberSaveable { mutableStateOf(false) }
   // The rider may grant permissions from system settings and come back.
   LifecycleResumeEffect(Unit) {
     permissions = context.currentPermissions()
