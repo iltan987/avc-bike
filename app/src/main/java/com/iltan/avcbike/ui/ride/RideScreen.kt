@@ -127,8 +127,8 @@ fun RideScreen(
     onStop = { RideSession.stop(context) },
     onOpenSettings = onOpenSettings,
     onOpenAppSettings = { context.openAppSettings() },
-    approximateOnly = approximateOnly,
     modifier = modifier,
+    approximateOnly = approximateOnly,
   )
 }
 
@@ -140,8 +140,8 @@ internal fun RideScreen(
   onStop: () -> Unit,
   onOpenSettings: () -> Unit,
   onOpenAppSettings: () -> Unit,
-  approximateOnly: Boolean = false,
   modifier: Modifier = Modifier,
+  approximateOnly: Boolean = false,
 ) {
   val status = state.status
   val settings = state.settings
