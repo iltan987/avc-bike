@@ -15,9 +15,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -52,6 +55,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -142,16 +146,7 @@ internal fun RideScreen(
   // GPS reports once a second; glide between readings so the number and arc move continuously.
   val glidingSpeed by animateFloatAsState(status.speedKmh ?: 0f, tween(950, easing = LinearEasing), label = "speed")
 
-  Column(modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-    Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-      Wordmark()
-      Spacer(Modifier.weight(1f))
-      IconButton(onClick = onOpenSettings) {
-        Icon(painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.settings_title), tint = colors.onSurfaceVariant)
-      }
-    }
-
-    Spacer(Modifier.weight(1f))
+  val gauge: @Composable (Modifier) -> Unit = { gaugeModifier ->
     SpeedGauge(
       speedKmh = status.speedKmh?.let { glidingSpeed },
       useMph = settings.useMph,
@@ -160,9 +155,10 @@ internal fun RideScreen(
       volumeLevel = status.volumeLevel,
       accent = accent,
       active = status.active,
-      modifier = Modifier.fillMaxWidth(),
+      modifier = gaugeModifier,
     )
-    Spacer(Modifier.height(20.dp))
+  }
+  val summary: @Composable ColumnScope.() -> Unit = {
     StatusChip(status = status, accent = accent)
     Spacer(Modifier.height(14.dp))
     Text(
@@ -175,13 +171,51 @@ internal fun RideScreen(
         ),
       style = MaterialTheme.typography.bodyMedium,
       color = colors.onSurfaceVariant,
+      textAlign = TextAlign.Center,
     )
-    Spacer(Modifier.weight(1f))
-
+  }
+  // Column-scoped, so the location notice keeps the column's expand-vertically animation.
+  val controls: @Composable ColumnScope.() -> Unit = {
     if (BuildConfig.DEBUG && status.active) SpeedSimulator(Modifier.padding(bottom = 16.dp))
     AnimatedVisibility(locationDenied && !status.active) { LocationDeniedNotice(onOpenAppSettings) }
     RideButton(active = status.active, onStart = onStart, onStop = onStop)
-    Spacer(Modifier.height(20.dp))
+  }
+
+  BoxWithConstraints(modifier.fillMaxSize()) {
+    // Handlebar mounts are often sideways: there a full-width square gauge would push the Start
+    // button off the screen, so the gauge and the controls sit side by side.
+    val landscape = maxWidth > maxHeight
+    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+      Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Wordmark()
+        Spacer(Modifier.weight(1f))
+        IconButton(onClick = onOpenSettings) {
+          Icon(painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.settings_title), tint = colors.onSurfaceVariant)
+        }
+      }
+
+      if (landscape) {
+        Row(Modifier.weight(1f).padding(bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+          Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) { gauge(Modifier) }
+          Spacer(Modifier.width(24.dp))
+          Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+            summary()
+            Spacer(Modifier.height(24.dp))
+            controls()
+          }
+        }
+      } else {
+        // The gauge is as wide as the screen allows, but shrinks on short screens (or split screen)
+        // so the button always stays visible.
+        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+          gauge(Modifier.weight(1f, fill = false))
+          Spacer(Modifier.height(20.dp))
+          summary()
+        }
+        controls()
+        Spacer(Modifier.height(20.dp))
+      }
+    }
   }
 }
 
@@ -298,4 +332,10 @@ private fun RideScreenQuietPreview() {
 @Composable
 private fun RideScreenIdleLightPreview() {
   AVCBikeTheme(darkTheme = false) { RideScreen(RideUiState(), true, {}, {}, {}, {}) }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B0D10, widthDp = 800, heightDp = 360)
+@Composable
+private fun RideScreenLandscapePreview() {
+  AVCBikeTheme(darkTheme = true) { RideScreen(previewCruising, false, {}, {}, {}, {}) }
 }

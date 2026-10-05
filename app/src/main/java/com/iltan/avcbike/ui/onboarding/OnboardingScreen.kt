@@ -17,19 +17,25 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -55,6 +61,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.iltan.avcbike.R
@@ -251,20 +258,23 @@ private fun WelcomePage() {
   val accent by animateColorAsState(if (quiet) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary, tween(700), label = "demo")
   val status = RideStatus(active = true, state = if (quiet) RideState.QUIET else RideState.CRUISING, speedKmh = speed.value, volumeLevel = 0f)
 
-  Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-    SpeedGauge(
-      speedKmh = speed.value,
-      useMph = false,
-      unitLabel = stringResource(R.string.unit_kmh),
-      quietBelowKmh = DEMO_QUIET_BELOW_KMH,
-      volumeLevel = if (quiet) DEMO_QUIET_VOLUME else DEMO_CRUISE_VOLUME,
-      accent = accent,
-      active = true,
-      modifier = Modifier.fillMaxWidth(0.78f),
-      // Like a real ride's fade: the music eases down over a moment while the bike keeps slowing.
-      volumeFadeMs = 1_400,
-    )
-    Spacer(Modifier.height(16.dp))
+  PageLayout(
+    visual = { visualModifier ->
+      SpeedGauge(
+        speedKmh = speed.value,
+        useMph = false,
+        unitLabel = stringResource(R.string.unit_kmh),
+        quietBelowKmh = DEMO_QUIET_BELOW_KMH,
+        volumeLevel = if (quiet) DEMO_QUIET_VOLUME else DEMO_CRUISE_VOLUME,
+        accent = accent,
+        active = true,
+        modifier = visualModifier,
+        // Like a real ride's fade: the music eases down over a moment while the bike keeps slowing.
+        volumeFadeMs = 1_400,
+      )
+    },
+    gap = 16.dp,
+  ) {
     StatusChip(status = status, accent = accent)
     Spacer(Modifier.height(28.dp))
     PageText(stringResource(R.string.onboarding_welcome_title), stringResource(R.string.onboarding_welcome_body))
@@ -280,17 +290,46 @@ private const val DEMO_QUIET_VOLUME = 0.32f
 @Composable
 private fun PermissionPage(@DrawableRes icon: Int, title: String, body: String, status: String?) {
   val colors = MaterialTheme.colorScheme
-  Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-    Box(Modifier.size(132.dp).background(colors.primary.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
-      Box(Modifier.size(88.dp).background(colors.primary.copy(alpha = 0.18f), CircleShape), contentAlignment = Alignment.Center) {
-        Icon(painterResource(icon), contentDescription = null, tint = colors.primary, modifier = Modifier.size(44.dp))
+  PageLayout(
+    visual = { visualModifier ->
+      Box(visualModifier.size(132.dp).background(colors.primary.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(88.dp).background(colors.primary.copy(alpha = 0.18f), CircleShape), contentAlignment = Alignment.Center) {
+          Icon(painterResource(icon), contentDescription = null, tint = colors.primary, modifier = Modifier.size(44.dp))
+        }
       }
-    }
-    Spacer(Modifier.height(40.dp))
+    },
+    gap = 40.dp,
+  ) {
     PageText(title, body)
     if (status != null) {
       Spacer(Modifier.height(20.dp))
       Text(status, style = MaterialTheme.typography.labelLarge, color = colors.primary, textAlign = TextAlign.Center)
+    }
+  }
+}
+
+/**
+ * A page's picture and text: stacked in portrait, side by side in landscape. The picture shrinks
+ * to fit (it must keep a square shape), and the text scrolls if a sideways screen is too short.
+ */
+@Composable
+private fun PageLayout(visual: @Composable (Modifier) -> Unit, gap: Dp, text: @Composable ColumnScope.() -> Unit) {
+  BoxWithConstraints(Modifier.fillMaxSize()) {
+    val visualMaxWidth = maxWidth * 0.78f
+    if (maxWidth > maxHeight) {
+      Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.weight(1f).fillMaxHeight().padding(vertical = 16.dp), contentAlignment = Alignment.Center) { visual(Modifier) }
+        Spacer(Modifier.width(24.dp))
+        Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+          Column(Modifier.verticalScroll(rememberScrollState()).padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally, content = text)
+        }
+      }
+    } else {
+      Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        visual(Modifier.weight(1f, fill = false).widthIn(max = visualMaxWidth))
+        Spacer(Modifier.height(gap))
+        text()
+      }
     }
   }
 }
@@ -320,5 +359,11 @@ private fun PageDots(count: Int, current: Int, modifier: Modifier = Modifier) {
 @Preview(showBackground = true, backgroundColor = 0xFF0B0D10, widthDp = 380, heightDp = 800)
 @Composable
 private fun OnboardingPreview() {
+  AVCBikeTheme(darkTheme = true) { OnboardingScreen(onFinished = {}) }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B0D10, widthDp = 800, heightDp = 360)
+@Composable
+private fun OnboardingLandscapePreview() {
   AVCBikeTheme(darkTheme = true) { OnboardingScreen(onFinished = {}) }
 }
