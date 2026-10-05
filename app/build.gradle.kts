@@ -5,10 +5,10 @@ plugins {
 }
 
 android {
-    namespace = "com.avcbike"
+    namespace = "com.iltan.avcbike"
     compileSdk = 37
     defaultConfig {
-        applicationId = "com.avcbike"
+        applicationId = "com.iltan.avcbike"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
