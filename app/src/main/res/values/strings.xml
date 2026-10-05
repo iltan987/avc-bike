@@ -53,6 +53,10 @@
     <string name="instant">Instant</string>
     <string name="seconds_value">%1$s s</string>
     <string name="units">Speed units</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="keep_screen_on">Keep screen on while riding</string>
     <string name="keep_screen_on_hint">Handy with a handlebar mount. Uses more battery.</string>
     <string name="privacy_note">AVC Bike uses your location only to measure speed during a ride. Nothing is stored or sent anywhere.</string>

@@ -8,10 +8,17 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.iltan.avcbike.speed.SpeedConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+
+enum class ThemeMode {
+  SYSTEM,
+  LIGHT,
+  DARK,
+}
 
 data class RideSettings(
   val quietBelowKmh: Float = 15f,
@@ -23,6 +30,7 @@ data class RideSettings(
   val fadeMs: Int = 1500,
   val useMph: Boolean = false,
   val keepScreenOn: Boolean = false,
+  val themeMode: ThemeMode = ThemeMode.SYSTEM,
   val onboardingDone: Boolean = false,
 ) {
   fun toSpeedConfig() =
@@ -66,6 +74,7 @@ class SettingsRepository(context: Context) {
       fadeMs = this[FADE_MS] ?: defaults.fadeMs,
       useMph = this[USE_MPH] ?: defaults.useMph,
       keepScreenOn = this[KEEP_SCREEN_ON] ?: defaults.keepScreenOn,
+      themeMode = this[THEME_MODE]?.let { name -> ThemeMode.entries.find { it.name == name } } ?: defaults.themeMode,
       onboardingDone = this[ONBOARDING_DONE] ?: defaults.onboardingDone,
     )
   }
@@ -79,6 +88,7 @@ class SettingsRepository(context: Context) {
     this[FADE_MS] = settings.fadeMs
     this[USE_MPH] = settings.useMph
     this[KEEP_SCREEN_ON] = settings.keepScreenOn
+    this[THEME_MODE] = settings.themeMode.name
     this[ONBOARDING_DONE] = settings.onboardingDone
   }
 
@@ -91,6 +101,7 @@ class SettingsRepository(context: Context) {
     val FADE_MS = intPreferencesKey("fade_ms")
     val USE_MPH = booleanPreferencesKey("use_mph")
     val KEEP_SCREEN_ON = booleanPreferencesKey("keep_screen_on")
+    val THEME_MODE = stringPreferencesKey("theme_mode")
     val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
   }
 }

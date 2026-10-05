@@ -49,6 +49,7 @@ import com.iltan.avcbike.audio.SystemMusicVolume
 import com.iltan.avcbike.settings.Preset
 import com.iltan.avcbike.settings.RideSettings
 import com.iltan.avcbike.settings.SettingsRepository
+import com.iltan.avcbike.settings.ThemeMode
 import com.iltan.avcbike.settings.displaySpeed
 import com.iltan.avcbike.settings.speedUnitLabel
 import com.iltan.avcbike.theme.AVCBikeTheme
@@ -148,19 +149,21 @@ internal fun SettingsScreen(
 
       SectionHeader(stringResource(R.string.section_display))
       SettingCard {
-        Text(stringResource(R.string.units), style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(10.dp))
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-          listOf(false, true).forEachIndexed { index, mph ->
-            SegmentedButton(
-              selected = settings.useMph == mph,
-              onClick = { onUpdate { it.copy(useMph = mph) } },
-              shape = SegmentedButtonDefaults.itemShape(index, 2),
-            ) {
-              Text(stringResource(speedUnitLabel(mph)))
-            }
-          }
-        }
+        ChoiceSetting(
+          title = stringResource(R.string.theme),
+          options = ThemeMode.entries,
+          selected = settings.themeMode,
+          label = { stringResource(themeLabel(it)) },
+          onSelect = { mode -> onUpdate { it.copy(themeMode = mode) } },
+        )
+        Spacer(Modifier.height(20.dp))
+        ChoiceSetting(
+          title = stringResource(R.string.units),
+          options = listOf(false, true),
+          selected = settings.useMph,
+          label = { stringResource(speedUnitLabel(it)) },
+          onSelect = { mph -> onUpdate { it.copy(useMph = mph) } },
+        )
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
           Column(Modifier.weight(1f)) {
@@ -225,6 +228,26 @@ private fun PresetCard(title: String, subtitle: String, selected: Boolean, onCli
     Surface(modifier = modifier.fillMaxHeight(), shape = shape, color = container, border = border) { Column(Modifier.padding(14.dp), content = content) }
   }
 }
+
+@Composable
+private fun <T> ChoiceSetting(title: String, options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit) {
+  Text(title, style = MaterialTheme.typography.titleSmall)
+  Spacer(Modifier.height(10.dp))
+  SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+    options.forEachIndexed { index, option ->
+      SegmentedButton(selected = option == selected, onClick = { onSelect(option) }, shape = SegmentedButtonDefaults.itemShape(index, options.size)) {
+        Text(label(option), maxLines = 1)
+      }
+    }
+  }
+}
+
+private fun themeLabel(mode: ThemeMode) =
+  when (mode) {
+    ThemeMode.SYSTEM -> R.string.theme_system
+    ThemeMode.LIGHT -> R.string.theme_light
+    ThemeMode.DARK -> R.string.theme_dark
+  }
 
 @Composable
 private fun SpeedRangeSetting(settings: RideSettings, unit: String, speed: (Float) -> Int, onUpdate: ((RideSettings) -> RideSettings) -> Unit) {
