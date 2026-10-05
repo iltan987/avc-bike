@@ -11,6 +11,20 @@
     <string name="state_quiet">Quiet</string>
     <string name="waiting_for_gps">Waiting for GPS</string>
     <string name="stop_ride">Stop ride</string>
+    <string name="start_ride">Start ride</string>
+
+    <!-- Ride screen -->
+    <string name="settings_title">Settings</string>
+    <string name="status_ready">Ready to ride</string>
+    <string name="status_waiting_for_gps">Finding GPS…</string>
+    <string name="status_cruising">Cruising · normal volume</string>
+    <string name="status_quiet">Quiet · %1$d%% volume</string>
+    <string name="thresholds_summary">Quiet below %1$d · back above %2$d %3$s</string>
+    <string name="volume_percent">VOL %1$d%%</string>
+    <string name="volume_idle">VOL –</string>
+    <string name="gauge_description">Speed %1$s %2$s, music volume %3$d percent</string>
+    <string name="location_denied">Location is needed to measure your speed.</string>
+    <string name="open_settings">Open settings</string>
 
     <!-- Ride notification -->
     <string name="notification_channel_ride">Active ride</string>
