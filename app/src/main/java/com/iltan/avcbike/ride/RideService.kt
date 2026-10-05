@@ -10,11 +10,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
-import android.location.Location
 import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
-import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -35,11 +33,6 @@ import com.iltan.avcbike.settings.speedUnitLabel
 import com.iltan.avcbike.speed.RideState
 import com.iltan.avcbike.speed.SpeedSample
 import com.iltan.avcbike.speed.SpeedStateMachine
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +49,7 @@ import kotlinx.coroutines.launch
  */
 class RideService : Service() {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-  private val fusedLocation by lazy { LocationServices.getFusedLocationProviderClient(this) }
+  private var speedSource: SpeedSource? = null
   private lateinit var volume: VolumeController
 
   private var settings = RideSettings()
@@ -68,13 +61,6 @@ class RideService : Service() {
   private var lastNotifiedMs = 0L
   private var lastMovingMs = 0L
   private var lostFixJob: Job? = null
-
-  private val locationCallback =
-    object : LocationCallback() {
-      override fun onLocationResult(result: LocationResult) {
-        result.locations.forEach(::onLocation)
-      }
-    }
 
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(AppLanguage.wrap(base))
@@ -129,25 +115,22 @@ class RideService : Service() {
     lastMovingMs = SystemClock.elapsedRealtime()
     scope.launch { watchForIdleRide() }
     if (BuildConfig.DEBUG) scope.launch { runSimulator() }
-    requestLocationUpdates()
+    startSpeedSource(SpeedSource.best(this))
     Log.i(TAG, "Ride started")
   }
 
-  @Suppress("MissingPermission") // Checked in startRide().
-  private fun requestLocationUpdates() {
-    fusedLocation.requestLocationUpdates(locationRequest(), locationCallback, Looper.getMainLooper())
-  }
-
-  private fun onLocation(location: Location) {
-    if (!location.hasSpeed() || RideSession.simulatedSpeedKmh.value != null) return
-    val sample =
-      SpeedSample(
-        timeMs = location.elapsedRealtimeNanos / 1_000_000,
-        speedKmh = location.speed * 3.6f,
-        accuracyM = if (location.hasAccuracy()) location.accuracy else null,
-        speedAccuracyKmh = if (location.hasSpeedAccuracy()) location.speedAccuracyMetersPerSecond * 3.6f else null,
-      )
-    onSample(sample)
+  /** If fused location fails (Play services broken or missing parts), falls back to plain GPS. */
+  private fun startSpeedSource(source: SpeedSource) {
+    speedSource = source
+    source.start(
+      onSample = { sample -> if (RideSession.simulatedSpeedKmh.value == null) onSample(sample) },
+      onFailed = {
+        if (running && speedSource === source && source is FusedSpeedSource) {
+          Log.w(TAG, "Falling back to GPS")
+          startSpeedSource(GpsSpeedSource(this))
+        }
+      },
+    )
   }
 
   private fun onSample(sample: SpeedSample) {
@@ -288,7 +271,8 @@ class RideService : Service() {
 
   override fun onDestroy() {
     if (running) {
-      fusedLocation.removeLocationUpdates(locationCallback)
+      speedSource?.stop()
+      speedSource = null
       // No fade: the service is going away, so put the volume back in one step.
       volume.restore(fadeMs = 0)
       running = false
@@ -303,14 +287,9 @@ class RideService : Service() {
   companion object {
     const val ACTION_STOP = "com.iltan.avcbike.action.STOP_RIDE"
 
-    /** 1 Hz GPS: fast enough to notice pulling away from a light within a couple of seconds. */
-    fun locationRequest(): LocationRequest =
-      LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, LOCATION_INTERVAL_MS).setMinUpdateIntervalMillis(LOCATION_INTERVAL_MS / 2).build()
-
     private const val TAG = "AVC"
     private const val CHANNEL_ID = "ride"
     private const val NOTIFICATION_ID = 1
-    private const val LOCATION_INTERVAL_MS = 1_000L
     private const val LOST_FIX_MS = 5_000L
     private const val NOTIFICATION_MIN_INTERVAL_MS = 5_000L
     private const val AUTO_STOP_NOTIFICATION_ID = 2

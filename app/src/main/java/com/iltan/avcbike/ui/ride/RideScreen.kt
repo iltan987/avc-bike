@@ -3,8 +3,10 @@ package com.iltan.avcbike.ui.ride
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -67,6 +69,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iltan.avcbike.BuildConfig
 import com.iltan.avcbike.R
 import com.iltan.avcbike.openAppSettings
+import com.iltan.avcbike.startFirstAvailable
 import com.iltan.avcbike.ride.RideSession
 import com.iltan.avcbike.ride.RideStatus
 import com.iltan.avcbike.ride.checkLocationSettings
@@ -102,6 +105,8 @@ fun RideScreen(
       context,
       onReady = { if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) RideSession.start(context) },
       onNeedsResolution = locationSettingsLauncher::launch,
+      // The rider taps Start again after switching location on.
+      onLocationOff = { context.startFirstAvailable(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) },
     )
   }
   val permissionLauncher =
