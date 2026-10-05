@@ -126,7 +126,7 @@ internal fun RideScreen(
   val status = state.status
   val settings = state.settings
   val colors = MaterialTheme.colorScheme
-  val accent by animateColorAsState(colors.stateColor(status.state), tween(500), label = "accent")
+  val accent by animateColorAsState(if (status.active) colors.stateColor(status.state) else colors.outline, tween(500), label = "accent")
   val unit = stringResource(speedUnitLabel(settings.useMph))
 
   Column(modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -148,7 +148,7 @@ internal fun RideScreen(
       modifier = Modifier.fillMaxWidth(),
     )
     Spacer(Modifier.height(20.dp))
-    StatusChip(status = status, quietPercent = settings.quietVolumePercent, accent = if (status.active) accent else colors.outline)
+    StatusChip(status = status, accent = accent)
     Spacer(Modifier.height(14.dp))
     Text(
       text =
@@ -184,12 +184,12 @@ private fun Wordmark() {
 }
 
 @Composable
-private fun StatusChip(status: RideStatus, quietPercent: Int, accent: Color) {
+internal fun StatusChip(status: RideStatus, accent: Color) {
   val label =
     when {
       !status.active -> stringResource(R.string.status_ready)
       status.speedKmh == null -> stringResource(R.string.status_waiting_for_gps)
-      status.state == RideState.QUIET -> stringResource(R.string.status_quiet, quietPercent)
+      status.state == RideState.QUIET -> stringResource(R.string.status_quiet)
       else -> stringResource(R.string.status_cruising)
     }
   Surface(shape = CircleShape, color = accent.copy(alpha = 0.14f)) {

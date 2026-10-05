@@ -15,7 +15,7 @@
     <string name="status_ready">Sürüşe hazır</string>
     <string name="status_waiting_for_gps">GPS aranıyor…</string>
     <string name="status_cruising">Seyirde · normal ses</string>
-    <string name="status_quiet">Kısık · ses %%%1$d</string>
+    <string name="status_quiet">Kısık · müzik kısıldı</string>
     <string name="thresholds_summary">%1$d altında kısılır · %2$d üstünde açılır (%3$s)</string>
     <string name="volume_percent">SES %%%1$d</string>
     <string name="volume_idle">SES –</string>

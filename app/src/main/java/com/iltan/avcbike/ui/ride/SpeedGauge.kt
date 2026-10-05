@@ -1,6 +1,5 @@
 package com.iltan.avcbike.ui.ride
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -49,7 +48,8 @@ private const val TICK_COUNT = 28
 
 /**
  * Dashboard gauge: the speed in the middle, and an arc around it showing the current music
- * volume. The arc animates as the volume fades, in the [accent] color of the ride state.
+ * volume. The arc animates as the volume fades. [accent] is used as given (callers animate it), so
+ * the gauge stays in step with anything else on screen tinted by the ride state.
  */
 @Composable
 fun SpeedGauge(
@@ -62,7 +62,6 @@ fun SpeedGauge(
 ) {
   val colors = MaterialTheme.colorScheme
   val level by animateFloatAsState(if (active) volumeLevel.coerceIn(0f, 1f) else 0f, tween(600), label = "volume")
-  val arcColor by animateColorAsState(if (active) accent else colors.outline, tween(500), label = "accent")
   val track = colors.surfaceContainerHigh
   val tickIdle = colors.outlineVariant
   val volumePercent = (volumeLevel * 100).roundToInt()
@@ -81,10 +80,10 @@ fun SpeedGauge(
       drawArc(track, START_ANGLE, SWEEP_ANGLE, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
       if (level > 0.005f) {
         // Soft glow under the arc, then the arc itself.
-        drawArc(arcColor.copy(alpha = 0.10f), START_ANGLE, SWEEP_ANGLE * level, false, topLeft, arcSize, style = Stroke(stroke * 1.7f, cap = StrokeCap.Round))
-        drawArc(arcColor, START_ANGLE, SWEEP_ANGLE * level, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
+        drawArc(accent.copy(alpha = 0.10f), START_ANGLE, SWEEP_ANGLE * level, false, topLeft, arcSize, style = Stroke(stroke * 1.7f, cap = StrokeCap.Round))
+        drawArc(accent, START_ANGLE, SWEEP_ANGLE * level, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
       }
-      drawTicks(radius = arcSize.width / 2 - stroke * 1.6f, level = level, lit = arcColor, idle = tickIdle)
+      drawTicks(radius = arcSize.width / 2 - stroke * 1.6f, level = level, lit = accent, idle = tickIdle)
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -97,12 +96,12 @@ fun SpeedGauge(
       Text(text = unitLabel.uppercaseLocalized(), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
       Spacer(Modifier.height(20.dp))
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-        Icon(painterResource(R.drawable.ic_volume_up), contentDescription = null, tint = arcColor, modifier = Modifier.size(18.dp))
+        Icon(painterResource(R.drawable.ic_volume_up), contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(6.dp))
         Text(
           text = if (active) stringResource(R.string.volume_percent, volumePercent) else stringResource(R.string.volume_idle),
           style = MaterialTheme.typography.labelLarge,
-          color = arcColor,
+          color = accent,
         )
       }
     }

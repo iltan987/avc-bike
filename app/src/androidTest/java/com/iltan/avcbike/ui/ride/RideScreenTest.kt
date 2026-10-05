@@ -30,7 +30,7 @@ class RideScreenTest {
     val state = RideUiState(status = RideStatus(active = true, state = RideState.QUIET, speedKmh = 3f, volumeLevel = 0.3f))
     composeTestRule.setContent { AVCBikeTheme { RideScreen(state, false, {}, {}, {}, {}) } }
     composeTestRule.onNodeWithText("3").assertIsDisplayed()
-    composeTestRule.onNodeWithText("QUIET · 40% VOLUME").assertIsDisplayed()
+    composeTestRule.onNodeWithText("QUIET · MUSIC TURNED DOWN").assertIsDisplayed()
     composeTestRule.onNodeWithText("STOP RIDE").assertIsDisplayed()
   }
 }

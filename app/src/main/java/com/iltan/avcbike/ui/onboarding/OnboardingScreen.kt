@@ -8,6 +8,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -35,11 +38,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,10 +54,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.iltan.avcbike.R
+import com.iltan.avcbike.ride.RideStatus
+import com.iltan.avcbike.speed.RideState
 import com.iltan.avcbike.theme.AVCBikeTheme
 import com.iltan.avcbike.ui.ride.SpeedGauge
+import com.iltan.avcbike.ui.ride.StatusChip
 import com.iltan.avcbike.ui.ride.openAppSettings
 import com.iltan.avcbike.ui.uppercaseLocalized
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -171,30 +178,49 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
 
 @Composable
 private fun WelcomePage() {
-  // A looping demo of the idea: the bike slows to a stop, the music dips, then it pulls away.
-  var demoStep by remember { mutableIntStateOf(0) }
+  // A looping mini ride: cruise, brake smoothly to a stop (the music dips below 15 km/h), wait at
+  // the light, then pull away (the music comes back above 20 km/h), the same rules a real ride uses.
+  val speed = remember { Animatable(DEMO_CRUISE_KMH) }
   LaunchedEffect(Unit) {
     while (true) {
-      delay(2_200)
-      demoStep = (demoStep + 1) % 2
+      delay(1_400)
+      speed.animateTo(0f, tween(2_600, easing = LinearOutSlowInEasing))
+      delay(1_600)
+      speed.animateTo(DEMO_CRUISE_KMH, tween(2_800, easing = FastOutSlowInEasing))
     }
   }
-  val quiet = demoStep == 1
-  val accent by animateColorAsState(if (quiet) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary, tween(600), label = "demo")
+  var quiet by remember { mutableStateOf(false) }
+  LaunchedEffect(Unit) {
+    snapshotFlow { speed.value }
+      .collect { kmh ->
+        if (!quiet && kmh < DEMO_QUIET_BELOW_KMH) quiet = true
+        if (quiet && kmh > DEMO_RESUME_ABOVE_KMH) quiet = false
+      }
+  }
+  val accent by animateColorAsState(if (quiet) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary, tween(700), label = "demo")
+  val status = RideStatus(active = true, state = if (quiet) RideState.QUIET else RideState.CRUISING, speedKmh = speed.value, volumeLevel = 0f)
 
   Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
     SpeedGauge(
-      speed = if (quiet) 0 else 48,
+      speed = speed.value.roundToInt(),
       unitLabel = stringResource(R.string.unit_kmh),
-      volumeLevel = if (quiet) 0.32f else 0.8f,
+      volumeLevel = if (quiet) DEMO_QUIET_VOLUME else DEMO_CRUISE_VOLUME,
       accent = accent,
       active = true,
-      modifier = Modifier.fillMaxWidth(0.82f),
+      modifier = Modifier.fillMaxWidth(0.78f),
     )
-    Spacer(Modifier.height(32.dp))
+    Spacer(Modifier.height(16.dp))
+    StatusChip(status = status, accent = accent)
+    Spacer(Modifier.height(28.dp))
     PageText(stringResource(R.string.onboarding_welcome_title), stringResource(R.string.onboarding_welcome_body))
   }
 }
+
+private const val DEMO_CRUISE_KMH = 52f
+private const val DEMO_QUIET_BELOW_KMH = 15f
+private const val DEMO_RESUME_ABOVE_KMH = 20f
+private const val DEMO_CRUISE_VOLUME = 0.8f
+private const val DEMO_QUIET_VOLUME = 0.32f
 
 @Composable
 private fun PermissionPage(@DrawableRes icon: Int, title: String, body: String, status: String?) {

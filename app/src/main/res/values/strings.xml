@@ -18,7 +18,7 @@
     <string name="status_ready">Ready to ride</string>
     <string name="status_waiting_for_gps">Finding GPS…</string>
     <string name="status_cruising">Cruising · normal volume</string>
-    <string name="status_quiet">Quiet · %1$d%% volume</string>
+    <string name="status_quiet">Quiet · music turned down</string>
     <string name="thresholds_summary">Quiet below %1$d · back above %2$d %3$s</string>
     <string name="volume_percent">VOL %1$d%%</string>
     <string name="volume_idle">VOL –</string>
