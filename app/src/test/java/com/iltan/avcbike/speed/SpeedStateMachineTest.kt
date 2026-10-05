@@ -70,6 +70,19 @@ class SpeedStateMachineTest {
   }
 
   @Test
+  fun uncertainSpeed_isIgnored() {
+    val machine = SpeedStateMachine(config)
+    machine.feed(0f, 0f, 0f, 0f, 0f)
+    assertEquals(RideState.QUIET, machine.state)
+    // Stopped at a light between tall buildings: jumpy speeds with a large speed uncertainty.
+    repeat(5) { machine.onSample(SpeedSample(5_000L + it * 1_000, 35f, accuracyM = 10f, speedAccuracyKmh = 20f)) }
+    assertEquals(RideState.QUIET, machine.state)
+    // A real pull-away, with a confident speed, still resumes.
+    repeat(3) { machine.onSample(SpeedSample(10_000L + it * 1_000, 35f, accuracyM = 5f, speedAccuracyKmh = 2f)) }
+    assertEquals(RideState.CRUISING, machine.state)
+  }
+
+  @Test
   fun gpsGap_keepsStateAndRestartsDelay() {
     val machine = SpeedStateMachine(config)
     machine.feed(0f, 0f, 0f, 0f, 0f)

@@ -145,6 +145,7 @@ class RideService : Service() {
         timeMs = location.elapsedRealtimeNanos / 1_000_000,
         speedKmh = location.speed * 3.6f,
         accuracyM = if (location.hasAccuracy()) location.accuracy else null,
+        speedAccuracyKmh = if (location.hasSpeedAccuracy()) location.speedAccuracyMetersPerSecond * 3.6f else null,
       )
     onSample(sample)
   }

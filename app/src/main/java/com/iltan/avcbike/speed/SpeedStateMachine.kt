@@ -13,14 +13,23 @@ data class SpeedConfig(
   val resumeDelayMs: Long,
   /** Fixes with a worse horizontal accuracy than this are ignored. */
   val maxAccuracyM: Float = 30f,
+  /**
+   * Readings whose speed is less certain than ± this are ignored: multipath near buildings can
+   * report a stopped bike as moving. Lenient (3 m/s) so phones that report pessimistic values
+   * still work.
+   */
+  val maxSpeedAccuracyKmh: Float = 10.8f,
   /** Number of recent readings the median is taken over. */
   val windowSize: Int = 3,
   /** A gap without readings longer than this starts smoothing and delays from scratch. */
   val staleAfterMs: Long = 5_000,
 )
 
-/** One speed reading. [accuracyM] is the horizontal accuracy of the fix, or null if unknown. */
-data class SpeedSample(val timeMs: Long, val speedKmh: Float, val accuracyM: Float? = null)
+/**
+ * One speed reading. [accuracyM] is the horizontal accuracy of the fix and [speedAccuracyKmh] the
+ * uncertainty of the speed itself; either is null if the phone doesn't report it.
+ */
+data class SpeedSample(val timeMs: Long, val speedKmh: Float, val accuracyM: Float? = null, val speedAccuracyKmh: Float? = null)
 
 data class SpeedSnapshot(val state: RideState, val smoothedKmh: Float?)
 
@@ -90,8 +99,9 @@ class SpeedStateMachine(config: SpeedConfig) {
 
   private fun isUsable(sample: SpeedSample): Boolean {
     if (sample.speedKmh.isNaN() || sample.speedKmh < 0f) return false
-    val accuracy = sample.accuracyM ?: return true
-    return accuracy <= config.maxAccuracyM
+    if (sample.accuracyM != null && sample.accuracyM > config.maxAccuracyM) return false
+    if (sample.speedAccuracyKmh != null && sample.speedAccuracyKmh > config.maxSpeedAccuracyKmh) return false
+    return true
   }
 
   private fun snapshot() = SpeedSnapshot(state, smoothedKmh)
