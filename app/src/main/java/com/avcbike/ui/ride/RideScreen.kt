@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.avcbike.BuildConfig
 import com.avcbike.R
 import com.avcbike.ride.RideSession
 import com.avcbike.ride.RideStatus
@@ -153,6 +154,7 @@ internal fun RideScreen(
     )
     Spacer(Modifier.weight(1f))
 
+    if (BuildConfig.DEBUG && status.active) SpeedSimulator(Modifier.padding(bottom = 16.dp))
     AnimatedVisibility(locationDenied && !status.active) { LocationDeniedNotice(onOpenAppSettings) }
     RideButton(active = status.active, onStart = onStart, onStop = onStop)
     Spacer(Modifier.height(20.dp))

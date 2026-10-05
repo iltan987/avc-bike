@@ -20,6 +20,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import com.avcbike.BuildConfig
 import com.avcbike.MainActivity
 import com.avcbike.R
 import com.avcbike.audio.SystemMusicVolume
@@ -41,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -104,6 +106,7 @@ class RideService : Service() {
     }
     scope.launch { volume.level.collect { level -> RideSession.update { it.copy(volumeLevel = level) } } }
     scope.launch { watchForLostFix() }
+    if (BuildConfig.DEBUG) scope.launch { runSimulator() }
     requestLocationUpdates()
     Log.i(TAG, "Ride started")
   }
@@ -118,7 +121,7 @@ class RideService : Service() {
   }
 
   private fun onLocation(location: Location) {
-    if (!location.hasSpeed()) return
+    if (!location.hasSpeed() || RideSession.simulatedSpeedKmh.value != null) return
     val sample =
       SpeedSample(
         timeMs = location.elapsedRealtimeNanos / 1_000_000,
@@ -144,6 +147,16 @@ class RideService : Service() {
     when (state) {
       RideState.QUIET -> volume.quiet(settings.quietVolumePercent, settings.fadeMs)
       RideState.CRUISING -> volume.restore(settings.fadeMs)
+    }
+  }
+
+  /** Feeds the simulator's speed in place of GPS, twice a second, while it is switched on. */
+  private suspend fun runSimulator() {
+    RideSession.simulatedSpeedKmh.collectLatest { speed ->
+      while (speed != null) {
+        onSample(SpeedSample(timeMs = SystemClock.elapsedRealtime(), speedKmh = speed, accuracyM = 5f))
+        delay(500)
+      }
     }
   }
 
@@ -215,6 +228,7 @@ class RideService : Service() {
       Log.i(TAG, "Ride stopped")
     }
     RideSession.update { RideStatus() }
+    RideSession.simulatedSpeedKmh.value = null
     scope.cancel()
     super.onDestroy()
   }

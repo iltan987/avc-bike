@@ -25,6 +25,9 @@ object RideSession {
 
   internal fun update(transform: (RideStatus) -> RideStatus) = _status.update(transform)
 
+  /** Debug builds only: when set, the ride uses this speed instead of GPS. */
+  val simulatedSpeedKmh = MutableStateFlow<Float?>(null)
+
   fun start(context: Context) {
     ContextCompat.startForegroundService(context, Intent(context, RideService::class.java))
   }
