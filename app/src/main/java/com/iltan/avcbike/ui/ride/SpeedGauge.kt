@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -35,7 +36,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.iltan.avcbike.R
 import com.iltan.avcbike.settings.displaySpeed
 import com.iltan.avcbike.theme.AVCBikeTheme
@@ -85,8 +85,9 @@ fun SpeedGauge(
   val description = stringResource(R.string.gauge_description, speed?.toString() ?: "–", unitLabel, volumePercent)
 
   BoxWithConstraints(modifier.aspectRatio(1f).semantics { contentDescription = description }, contentAlignment = Alignment.Center) {
-    // Numerals scale with the gauge so they clear the tick marks at any size.
-    val numeralSize = (maxWidth.value * 0.28f).sp
+    // Numerals scale with the gauge so they clear the tick marks at any size. Sized from the
+    // gauge, not the font setting: at large font scales sp numerals would spill over the ticks.
+    val numeralSize = with(LocalDensity.current) { (maxWidth * 0.28f).toSp() }
     val numerals = SpeedNumerals.copy(fontSize = numeralSize, lineHeight = numeralSize)
     Canvas(Modifier.fillMaxSize()) {
       val stroke = 18.dp.toPx()
