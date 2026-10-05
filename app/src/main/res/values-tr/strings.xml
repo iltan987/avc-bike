@@ -89,6 +89,9 @@
     <string name="notification_ride_starting">Sürüş başlıyor…</string>
     <string name="notification_cruising_text">Müzik normal seviyede</string>
     <string name="notification_auto_stopped_title">Sürüş bitti</string>
-    <string name="notification_auto_stopped_text">%1$d dakikadır hareket yok; pil tasarrufu için sürüş durduruldu.</string>
+    <plurals name="notification_auto_stopped_text">
+        <item quantity="one">%1$d dakikadır hareket yok; pil tasarrufu için sürüş durduruldu.</item>
+        <item quantity="other">%1$d dakikadır hareket yok; pil tasarrufu için sürüş durduruldu.</item>
+    </plurals>
     <string name="notification_quiet_text">Yavaşken müzik kısıldı</string>
 </resources>

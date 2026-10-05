@@ -97,6 +97,9 @@
     <string name="notification_ride_title" translatable="false">%1$s · %2$s</string>
     <string name="notification_cruising_text">Music at your normal volume</string>
     <string name="notification_auto_stopped_title">Ride ended</string>
-    <string name="notification_auto_stopped_text">No movement for %1$d minutes, so the ride was stopped to save battery.</string>
+    <plurals name="notification_auto_stopped_text">
+        <item quantity="one">No movement for %1$d minute, so the ride was stopped to save battery.</item>
+        <item quantity="other">No movement for %1$d minutes, so the ride was stopped to save battery.</item>
+    </plurals>
     <string name="notification_quiet_text">Music turned down while you\'re slow</string>
 </resources>

@@ -204,12 +204,17 @@ class RideService : Service() {
       NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_notification)
         .setContentTitle(getString(R.string.notification_auto_stopped_title))
-        .setContentText(getString(R.string.notification_auto_stopped_text, AUTO_STOP_MS / 60_000))
+        .setContentText(autoStopText())
         .setContentIntent(openApp)
         .setAutoCancel(true)
         .build()
     @Suppress("MissingPermission") // Checked with areNotificationsEnabled() above.
     NotificationManagerCompat.from(this).notify(AUTO_STOP_NOTIFICATION_ID, notification)
+  }
+
+  private fun autoStopText(): String {
+    val minutes = (AUTO_STOP_MS / 60_000).toInt()
+    return resources.getQuantityString(R.plurals.notification_auto_stopped_text, minutes, minutes)
   }
 
   /**

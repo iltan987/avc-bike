@@ -29,6 +29,10 @@ android {
       // Lists English and Turkish in Android 13+ per-app language settings.
       generateLocaleConfig = true
     }
+    bundle {
+      // Keep both languages in every install: the in-app picker can switch to one the phone isn't set to.
+      language { enableSplit = false }
+    }
     buildFeatures {
       compose = true
       aidl = false
