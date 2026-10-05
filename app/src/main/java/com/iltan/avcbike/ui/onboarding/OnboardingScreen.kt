@@ -64,7 +64,6 @@ import com.iltan.avcbike.ui.ride.SpeedGauge
 import com.iltan.avcbike.ui.ride.StatusChip
 import com.iltan.avcbike.ui.ride.openAppSettings
 import com.iltan.avcbike.ui.uppercaseLocalized
-import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -236,12 +235,16 @@ private fun WelcomePage() {
 
   Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
     SpeedGauge(
-      speed = speed.value.roundToInt(),
+      speedKmh = speed.value,
+      useMph = false,
       unitLabel = stringResource(R.string.unit_kmh),
+      quietBelowKmh = DEMO_QUIET_BELOW_KMH,
       volumeLevel = if (quiet) DEMO_QUIET_VOLUME else DEMO_CRUISE_VOLUME,
       accent = accent,
       active = true,
       modifier = Modifier.fillMaxWidth(0.78f),
+      // Like a real ride's fade: the music eases down over a moment while the bike keeps slowing.
+      volumeFadeMs = 1_400,
     )
     Spacer(Modifier.height(16.dp))
     StatusChip(status = status, accent = accent)

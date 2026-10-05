@@ -17,8 +17,7 @@
     <string name="status_cruising">Seyirde · normal ses</string>
     <string name="status_quiet">Kısık · müzik kısıldı</string>
     <string name="thresholds_summary">%1$d altında kısılır · %2$d üstünde açılır (%3$s)</string>
-    <string name="volume_percent">SES %%%1$d</string>
-    <string name="volume_idle">SES –</string>
+    <string name="volume_percent_short">%%%1$d</string>
     <string name="gauge_description">Hız %1$s %2$s, müzik sesi %%%3$d</string>
     <string name="location_denied">Hızını ölçmek için konum izni gerekiyor.</string>
     <string name="open_settings">Ayarları aç</string>

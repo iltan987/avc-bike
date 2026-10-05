@@ -12,6 +12,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -128,6 +130,8 @@ internal fun RideScreen(
   val colors = MaterialTheme.colorScheme
   val accent by animateColorAsState(if (status.active) colors.stateColor(status.state) else colors.outline, tween(500), label = "accent")
   val unit = stringResource(speedUnitLabel(settings.useMph))
+  // GPS reports once a second; glide between readings so the number and arc move continuously.
+  val glidingSpeed by animateFloatAsState(status.speedKmh ?: 0f, tween(950, easing = LinearEasing), label = "speed")
 
   Column(modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
     Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -140,8 +144,10 @@ internal fun RideScreen(
 
     Spacer(Modifier.weight(1f))
     SpeedGauge(
-      speed = status.speedKmh?.let { displaySpeed(it, settings.useMph) },
+      speedKmh = status.speedKmh?.let { glidingSpeed },
+      useMph = settings.useMph,
       unitLabel = unit,
+      quietBelowKmh = settings.quietBelowKmh,
       volumeLevel = status.volumeLevel,
       accent = accent,
       active = status.active,
