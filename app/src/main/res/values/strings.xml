@@ -37,7 +37,7 @@
     <string name="preset_touring">Touring</string>
     <string name="preset_custom">Custom</string>
     <string name="preset_custom_hint">Your own</string>
-    <string name="preset_summary" translatable="false">%1$d → %2$d %3$s</string>
+    <string name="preset_summary" translatable="false">%1$d → %2$d</string>
     <string name="quiet_below">Quiet below</string>
     <string name="back_above">Back above</string>
     <string name="speed_range_hint">The gap between the two stops the music from bouncing in stop-and-go traffic.</string>

@@ -233,7 +233,8 @@ private fun PresetRow(settings: RideSettings, unit: String, onPreset: (Preset) -
     Preset.entries.forEach { preset ->
       PresetCard(
         title = stringResource(if (preset == Preset.CITY) R.string.preset_city else R.string.preset_touring),
-        subtitle = stringResource(R.string.preset_summary, speed(preset.quietBelowKmh), speed(preset.resumeAboveKmh), unit),
+        subtitle = stringResource(R.string.preset_summary, speed(preset.quietBelowKmh), speed(preset.resumeAboveKmh)),
+        unit = unit,
         selected = selected == preset,
         onClick = { onPreset(preset) },
         modifier = Modifier.weight(1f),
@@ -242,8 +243,9 @@ private fun PresetRow(settings: RideSettings, unit: String, onPreset: (Preset) -
     PresetCard(
       title = stringResource(R.string.preset_custom),
       subtitle =
-        if (selected == null) stringResource(R.string.preset_summary, speed(settings.quietBelowKmh), speed(settings.resumeAboveKmh), unit)
+        if (selected == null) stringResource(R.string.preset_summary, speed(settings.quietBelowKmh), speed(settings.resumeAboveKmh))
         else stringResource(R.string.preset_custom_hint),
+      unit = if (selected == null) unit else null,
       selected = selected == null,
       onClick = null,
       modifier = Modifier.weight(1f),
@@ -252,7 +254,7 @@ private fun PresetRow(settings: RideSettings, unit: String, onPreset: (Preset) -
 }
 
 @Composable
-private fun PresetCard(title: String, subtitle: String, selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
+private fun PresetCard(title: String, subtitle: String, unit: String?, selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
   val colors = MaterialTheme.colorScheme
   val shape = RoundedCornerShape(18.dp)
   val border = if (selected) BorderStroke(2.dp, colors.primary) else BorderStroke(1.dp, colors.outlineVariant)
@@ -260,7 +262,9 @@ private fun PresetCard(title: String, subtitle: String, selected: Boolean, onCli
   val content: @Composable ColumnScope.() -> Unit = {
     Text(title, style = MaterialTheme.typography.titleSmall, color = if (selected) colors.primary else colors.onSurface)
     Spacer(Modifier.height(4.dp))
-    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+    // Numbers and unit on separate lines, so a narrow card never splits "km/sa" in two.
+    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
+    if (unit != null) Text(unit, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
   }
   if (onClick != null) {
     Surface(onClick = onClick, modifier = modifier.fillMaxHeight(), shape = shape, color = container, border = border) {
