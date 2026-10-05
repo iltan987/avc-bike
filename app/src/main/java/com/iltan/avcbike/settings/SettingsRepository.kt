@@ -2,16 +2,20 @@ package com.iltan.avcbike.settings
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.iltan.avcbike.speed.SpeedConfig
+import java.io.IOException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 enum class ThemeMode {
@@ -52,12 +56,18 @@ enum class Preset(val quietBelowKmh: Float, val resumeAboveKmh: Float) {
   }
 }
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+// A damaged settings file falls back to defaults instead of crashing the app on every launch.
+private val Context.dataStore: DataStore<Preferences> by
+  preferencesDataStore(name = "settings", corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() })
 
 class SettingsRepository(context: Context) {
   private val dataStore = context.applicationContext.dataStore
 
-  val settings: Flow<RideSettings> = dataStore.data.map { it.toSettings() }
+  val settings: Flow<RideSettings> =
+    dataStore.data
+      // An unreadable file (rather than a damaged one) also means defaults, not a stuck splash.
+      .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+      .map { it.toSettings() }
 
   suspend fun update(transform: (RideSettings) -> RideSettings) {
     dataStore.edit { prefs -> prefs.write(transform(prefs.toSettings())) }
