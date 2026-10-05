@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.net.toUri
+import com.iltan.avcbike.appDetailsIntent
+import com.iltan.avcbike.startFirstAvailable
 
 /**
  * Some phones (Samsung, Xiaomi and others) stop background apps to save battery, which can end a
@@ -22,3 +24,13 @@ fun Context.isIgnoringBatteryOptimizations(): Boolean = getSystemService(PowerMa
 @SuppressLint("BatteryLife")
 fun Context.batteryExemptionIntent(): Intent =
   Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, "package:$packageName".toUri())
+
+/**
+ * Where to go if a phone has removed the one-tap dialog: the full battery optimization list, then
+ * the app's own settings page.
+ */
+fun Context.batteryExemptionFallbacks(): Array<Intent> = arrayOf(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS), appDetailsIntent())
+
+fun Context.openBatteryExemption() {
+  startFirstAvailable(batteryExemptionIntent(), *batteryExemptionFallbacks())
+}

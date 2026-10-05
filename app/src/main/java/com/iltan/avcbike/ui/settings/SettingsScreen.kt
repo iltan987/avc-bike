@@ -48,8 +48,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iltan.avcbike.R
 import com.iltan.avcbike.audio.PrefsQuietMemory
 import com.iltan.avcbike.audio.SystemMusicVolume
-import com.iltan.avcbike.ride.batteryExemptionIntent
 import com.iltan.avcbike.ride.isIgnoringBatteryOptimizations
+import com.iltan.avcbike.ride.openBatteryExemption
 import com.iltan.avcbike.settings.AppLanguage
 import com.iltan.avcbike.settings.Preset
 import com.iltan.avcbike.settings.RideSettings
@@ -82,7 +82,7 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel:
     onUpdate = viewModel::update,
     onPreset = viewModel::applyPreset,
     onPreviewQuiet = viewModel::previewQuietVolume,
-    onAllowBattery = { context.startActivity(context.batteryExemptionIntent()) },
+    onAllowBattery = { context.openBatteryExemption() },
     modifier = modifier,
   )
 }

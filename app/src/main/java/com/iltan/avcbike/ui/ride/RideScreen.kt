@@ -3,11 +3,8 @@ package com.iltan.avcbike.ui.ride
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -63,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iltan.avcbike.BuildConfig
 import com.iltan.avcbike.R
+import com.iltan.avcbike.openAppSettings
 import com.iltan.avcbike.ride.RideSession
 import com.iltan.avcbike.ride.RideStatus
 import com.iltan.avcbike.ride.checkLocationSettings
@@ -110,7 +108,7 @@ fun RideScreen(
     },
     onStop = { RideSession.stop(context) },
     onOpenSettings = onOpenSettings,
-    onOpenAppSettings = { openAppSettings(context) },
+    onOpenAppSettings = { context.openAppSettings() },
     modifier = modifier,
   )
 }
@@ -268,12 +266,6 @@ internal fun ridePermissions(): Array<String> = buildList {
   add(Manifest.permission.ACCESS_COARSE_LOCATION)
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
 }.toTypedArray()
-
-internal fun openAppSettings(context: Context) {
-  context.startActivity(
-    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-  )
-}
 
 private val previewCruising =
   RideUiState(status = RideStatus(active = true, state = RideState.CRUISING, speedKmh = 42f, volumeLevel = 0.8f), settings = RideSettings())

@@ -1,6 +1,7 @@
 package com.iltan.avcbike.ui.onboarding
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -57,14 +58,16 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.iltan.avcbike.R
+import com.iltan.avcbike.openAppSettings
 import com.iltan.avcbike.ride.RideStatus
+import com.iltan.avcbike.ride.batteryExemptionFallbacks
 import com.iltan.avcbike.ride.batteryExemptionIntent
 import com.iltan.avcbike.ride.isIgnoringBatteryOptimizations
 import com.iltan.avcbike.speed.RideState
+import com.iltan.avcbike.startFirstAvailable
 import com.iltan.avcbike.theme.AVCBikeTheme
 import com.iltan.avcbike.ui.ride.SpeedGauge
 import com.iltan.avcbike.ui.ride.StatusChip
-import com.iltan.avcbike.ui.ride.openAppSettings
 import com.iltan.avcbike.ui.uppercaseLocalized
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -135,6 +138,15 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
       if (permissions.battery) next()
     }
 
+  fun requestBatteryExemption() {
+    try {
+      batteryLauncher.launch(context.batteryExemptionIntent())
+    } catch (_: ActivityNotFoundException) {
+      // Some phones have removed the one-tap dialog; coming back re-checks the permission.
+      context.startFirstAvailable(*context.batteryExemptionFallbacks())
+    }
+  }
+
   val page = pages[pagerState.currentPage]
   Column(modifier.fillMaxSize().padding(horizontal = 24.dp)) {
     HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { index ->
@@ -176,14 +188,14 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
     val (label, action) =
       when {
         page == Page.LOCATION && !permissions.location && locationAsked ->
-          stringResource(R.string.open_settings) to { openAppSettings(context) }
+          stringResource(R.string.open_settings) to { context.openAppSettings() }
         page == Page.LOCATION && !permissions.location ->
           stringResource(R.string.onboarding_allow_location) to
             { locationLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
         page == Page.NOTIFICATIONS && !permissions.notifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
           stringResource(R.string.onboarding_allow_notifications) to { notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
         page == Page.BATTERY && !permissions.battery ->
-          stringResource(R.string.onboarding_allow_battery) to { batteryLauncher.launch(context.batteryExemptionIntent()) }
+          stringResource(R.string.onboarding_allow_battery) to ::requestBatteryExemption
         isLast -> stringResource(R.string.onboarding_lets_ride) to ::next
         else -> stringResource(R.string.onboarding_next) to ::next
       }
