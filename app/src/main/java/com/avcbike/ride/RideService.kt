@@ -198,7 +198,7 @@ class RideService : Service() {
       PendingIntent.getService(this, 1, Intent(this, RideService::class.java).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE)
     val quiet = RideSession.status.value.state == RideState.QUIET
     return NotificationCompat.Builder(this, CHANNEL_ID)
-      .setSmallIcon(R.drawable.ic_speed)
+      .setSmallIcon(R.drawable.ic_notification)
       .setContentTitle(lastNotificationText ?: getString(R.string.notification_ride_starting))
       .setContentText(getString(if (quiet) R.string.notification_quiet_text else R.string.notification_cruising_text))
       .setContentIntent(openApp)
