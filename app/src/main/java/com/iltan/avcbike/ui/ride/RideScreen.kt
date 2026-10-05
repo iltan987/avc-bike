@@ -41,7 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,7 +87,8 @@ fun RideScreen(
 ) {
   val state by viewModel.uiState.collectAsStateWithLifecycle()
   val context = LocalContext.current
-  var locationDenied by remember { mutableStateOf(false) }
+  var locationDenied by rememberSaveable { mutableStateOf(false) }
+  var approximateOnly by rememberSaveable { mutableStateOf(false) }
   val locationSettingsLauncher =
     rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
       if (result.resultCode == Activity.RESULT_OK) RideSession.start(context)
@@ -110,6 +111,8 @@ fun RideScreen(
         startRide()
       } else {
         locationDenied = true
+        // "Approximate" was chosen: location is allowed, but too coarse to measure speed.
+        approximateOnly = results[Manifest.permission.ACCESS_COARSE_LOCATION] == true
       }
     }
 
@@ -124,6 +127,7 @@ fun RideScreen(
     onStop = { RideSession.stop(context) },
     onOpenSettings = onOpenSettings,
     onOpenAppSettings = { context.openAppSettings() },
+    approximateOnly = approximateOnly,
     modifier = modifier,
   )
 }
@@ -136,6 +140,7 @@ internal fun RideScreen(
   onStop: () -> Unit,
   onOpenSettings: () -> Unit,
   onOpenAppSettings: () -> Unit,
+  approximateOnly: Boolean = false,
   modifier: Modifier = Modifier,
 ) {
   val status = state.status
@@ -177,7 +182,7 @@ internal fun RideScreen(
   // Column-scoped, so the location notice keeps the column's expand-vertically animation.
   val controls: @Composable ColumnScope.() -> Unit = {
     if (BuildConfig.DEBUG && status.active) SpeedSimulator(Modifier.padding(bottom = 16.dp))
-    AnimatedVisibility(locationDenied && !status.active) { LocationDeniedNotice(onOpenAppSettings) }
+    AnimatedVisibility(locationDenied && !status.active) { LocationDeniedNotice(approximateOnly, onOpenAppSettings) }
     RideButton(active = status.active, onStart = onStart, onStop = onStop)
   }
 
@@ -275,14 +280,14 @@ private fun RideButton(active: Boolean, onStart: () -> Unit, onStop: () -> Unit)
 }
 
 @Composable
-private fun LocationDeniedNotice(onOpenAppSettings: () -> Unit) {
+private fun LocationDeniedNotice(approximateOnly: Boolean, onOpenAppSettings: () -> Unit) {
   Surface(
     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
     shape = RoundedCornerShape(16.dp),
     color = MaterialTheme.colorScheme.surfaceContainer,
   ) {
     Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-      Text(stringResource(R.string.location_denied), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+      Text(stringResource(if (approximateOnly) R.string.location_approximate else R.string.location_denied), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
       TextButton(onClick = onOpenAppSettings) { Text(stringResource(R.string.open_settings)) }
     }
   }

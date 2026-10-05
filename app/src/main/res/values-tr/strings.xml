@@ -20,6 +20,7 @@
     <string name="volume_percent_short">%%%1$d</string>
     <string name="gauge_description">Hız %1$s %2$s, müzik sesi %%%3$d</string>
     <string name="location_denied">Hızını ölçmek için konum izni gerekiyor.</string>
+    <string name="location_approximate">Hızını ölçmek için tam konum gerekiyor. Ayarlar\'dan AVC Bike için “Tam konumu kullan” seçeneğini aç.</string>
     <string name="open_settings">Ayarları aç</string>
 
     <!-- Settings screen -->
