@@ -14,12 +14,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Debug builds show a speed simulator on the ride screen, so you can test at a desk.
 
-## Release builds for sharing
+## Release builds
 
-Release builds are shrunk with R8 and signed with your own release key. Every update must be signed
-with the **same** key, or friends can't install it over their current version. Keep the key file and
-its password backed up somewhere safe, such as a password manager or private cloud storage. Never
-commit them.
+Release builds are shrunk with R8 and signed with your own **upload key**. Google Play re-signs the
+app with its own app signing key (Play App Signing), so the upload key never reaches users, but every
+upload must be signed with it. Keep the key file and its password backed up somewhere safe, such as
+a password manager or private cloud storage. Never commit them.
 
 1. Create the key once (pick your own password when asked):
 
@@ -39,17 +39,27 @@ commit them.
    avcbike.release.keyPassword=<your password>
    ```
 
-3. Build: `./gradlew assembleRelease` produces `app/build/outputs/apk/release/app-release.apk`.
+3. Build:
+   - `./gradlew bundleRelease` produces `app/build/outputs/bundle/release/app-release.aab` for
+     Google Play.
+   - `./gradlew assembleRelease` produces `app/build/outputs/apk/release/app-release.apk` for
+     testing a release build on your own phone.
 
-Before each new release, raise `versionCode` (and `versionName`) in `app/build.gradle.kts`.
+## Publishing on Google Play
 
-## Sharing with friends
+Before each upload, raise `versionCode` (Play rejects a repeated one) and `versionName` in
+`app/build.gradle.kts`. Then upload `app-release.aab` in the Play Console.
 
-Send `app-release.apk` (Google Drive, Telegram, WhatsApp, …). When they open it, Android asks them
-to allow installing apps from that source.
+- `store/listing.md`: store listing text in English and Turkish.
+- `store/*.png`: icon and feature graphics.
+- `store/screenshots/`: phone screenshots.
+- `store/play-console.md`: answers for the App content forms (data safety, content rating,
+  foreground service declaration) and the testing steps for a new developer account.
+- `PRIVACY.md`: the privacy policy linked from the store listing.
 
-Android developer verification: from 2026-09-30, certified devices in Brazil, Indonesia, Singapore
-and Thailand only install apps from verified developers, and this expands worldwide in 2027. A free
-*limited distribution* account in the Android Developer Console covers up to 20 devices. Register
-the package name `com.iltan.avcbike` and your release key there before it reaches your friends'
-countries.
+If the app changes what it does with data or which permissions it uses, update `PRIVACY.md`,
+`store/play-console.md` and the matching Play Console forms in the same release.
+
+An APK you build yourself is signed with the upload key, and a Play install is signed with Google's
+app signing key. Android won't install one over the other, so uninstall first when switching (this
+wipes the app's settings).
