@@ -31,7 +31,10 @@ interface SpeedSource {
   }
 }
 
-/** Huawei and Honor phones (and some others) ship without Google Play services. */
+/**
+ * False on phones without Google Play services: Huawei phones released since 2019 (US sanctions),
+ * Honor phones from the Huawei era up to early 2021, and phones running Google-free ROMs.
+ */
 fun hasPlayServices(context: Context): Boolean =
   GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
 
