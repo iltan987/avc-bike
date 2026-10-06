@@ -6,7 +6,7 @@ Text for the Play Console's main store listing. Limits: app name 30 characters, 
 Graphics in this folder:
 
 - `icon-512.png`: app icon, 512×512
-- `feature-graphic.png`: 1024×500
+- `feature-graphic.png`, `feature-graphic-tr.png`: 1024×500, English and Turkish tagline
 - `screenshots/en-US/`, `screenshots/tr-TR/`: phone screenshots
 
 ## English (United States), en-US
