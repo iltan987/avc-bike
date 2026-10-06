@@ -48,6 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iltan.avcbike.R
 import com.iltan.avcbike.audio.PrefsQuietMemory
 import com.iltan.avcbike.audio.SystemMusicVolume
+import com.iltan.avcbike.ride.batteryExemptionSteps
 import com.iltan.avcbike.ride.isIgnoringBatteryOptimizations
 import com.iltan.avcbike.ride.openBatteryExemption
 import com.iltan.avcbike.settings.AppLanguage
@@ -70,7 +71,7 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel:
   val state by viewModel.uiState.collectAsStateWithLifecycle()
   val context = LocalContext.current
   var batteryUnrestricted by remember { mutableStateOf(context.isIgnoringBatteryOptimizations()) }
-  // Re-check when coming back from the system dialog or battery settings.
+  // Re-check when coming back from battery settings.
   LifecycleResumeEffect(Unit) {
     batteryUnrestricted = context.isIgnoringBatteryOptimizations()
     onPauseOrDispose {}
@@ -210,6 +211,7 @@ internal fun SettingsScreen(
           Column(Modifier.weight(1f)) {
             Text(stringResource(R.string.battery_setting_title), style = MaterialTheme.typography.titleSmall)
             Hint(stringResource(if (batteryUnrestricted) R.string.battery_setting_on else R.string.battery_setting_off))
+            if (!batteryUnrestricted) Hint(stringResource(batteryExemptionSteps()))
           }
           if (!batteryUnrestricted) {
             FilledTonalButton(onClick = onAllowBattery, modifier = Modifier.padding(start = 12.dp)) { Text(stringResource(R.string.battery_setting_action)) }

@@ -1,7 +1,6 @@
 package com.iltan.avcbike.ui.onboarding
 
 import android.Manifest
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -67,11 +66,10 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.iltan.avcbike.R
 import com.iltan.avcbike.openAppSettings
 import com.iltan.avcbike.ride.RideStatus
-import com.iltan.avcbike.ride.batteryExemptionFallbacks
-import com.iltan.avcbike.ride.batteryExemptionIntent
+import com.iltan.avcbike.ride.batteryExemptionSteps
 import com.iltan.avcbike.ride.isIgnoringBatteryOptimizations
+import com.iltan.avcbike.ride.openBatteryExemption
 import com.iltan.avcbike.speed.RideState
-import com.iltan.avcbike.startFirstAvailable
 import com.iltan.avcbike.theme.AVCBikeTheme
 import com.iltan.avcbike.ui.ride.SpeedGauge
 import com.iltan.avcbike.ui.ride.StatusChip
@@ -139,21 +137,6 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
       permissions = context.currentPermissions()
       next()
     }
-  val batteryLauncher =
-    rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-      permissions = context.currentPermissions()
-      if (permissions.battery) next()
-    }
-
-  fun requestBatteryExemption() {
-    try {
-      batteryLauncher.launch(context.batteryExemptionIntent())
-    } catch (_: ActivityNotFoundException) {
-      // Some phones have removed the one-tap dialog; coming back re-checks the permission.
-      context.startFirstAvailable(*context.batteryExemptionFallbacks())
-    }
-  }
-
   val page = pages[pagerState.currentPage]
   val isLast = pagerState.currentPage == pages.lastIndex
   val (label, action) =
@@ -166,7 +149,8 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
       page == Page.NOTIFICATIONS && !permissions.notifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
         stringResource(R.string.onboarding_allow_notifications) to { notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
       page == Page.BATTERY && !permissions.battery ->
-        stringResource(R.string.onboarding_allow_battery) to ::requestBatteryExemption
+        // Coming back from battery settings re-checks it (see LifecycleResumeEffect above).
+        stringResource(R.string.onboarding_allow_battery) to { context.openBatteryExemption() }
       isLast -> stringResource(R.string.onboarding_lets_ride) to ::next
       else -> stringResource(R.string.onboarding_next) to ::next
     }
@@ -207,7 +191,7 @@ fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
             icon = R.drawable.ic_battery_android_full,
             title = stringResource(R.string.onboarding_battery_title),
             body = stringResource(R.string.onboarding_battery_body),
-            status = if (permissions.battery) stringResource(R.string.onboarding_battery_granted) else null,
+            status = stringResource(if (permissions.battery) R.string.onboarding_battery_granted else batteryExemptionSteps()),
           )
       }
     }

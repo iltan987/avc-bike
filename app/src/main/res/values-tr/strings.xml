@@ -60,6 +60,8 @@
     <string name="battery_setting_on">İzin verildi. Sürüşler ekran kapalıyken de devam eder.</string>
     <string name="battery_setting_off">Telefonun, ekran kapalıyken sürüşü durdurabilir.</string>
     <string name="battery_setting_action">İzin ver</string>
+    <string name="battery_steps_unrestricted">Açılan ekranda Pil\'e dokun ve Kısıtlanmamış\'ı seç.</string>
+    <string name="battery_steps_dont_optimize">Açılan listede Tüm uygulamalar\'a geç, AVC Bike\'a dokun ve Optimize etme\'yi seç.</string>
     <string name="keep_screen_on">Sürüşte ekranı açık tut</string>
     <string name="keep_screen_on_hint">Gidona takılı telefonlar için kullanışlı. Daha fazla pil harcar.</string>
     <string name="privacy_note">AVC Bike konumunu yalnızca sürüş sırasında hızını ölçmek için kullanır. Hiçbir şey kaydedilmez, hiçbir yere gönderilmez.</string>
