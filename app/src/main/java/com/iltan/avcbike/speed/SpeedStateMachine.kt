@@ -97,7 +97,8 @@ class SpeedStateMachine(config: SpeedConfig) {
     pendingSinceMs = null
   }
 
-  private fun isUsable(sample: SpeedSample): Boolean {
+  /** False for readings that are ignored: impossible, or too uncertain to trust. */
+  fun isUsable(sample: SpeedSample): Boolean {
     if (sample.speedKmh.isNaN() || sample.speedKmh < 0f) return false
     if (sample.accuracyM != null && sample.accuracyM > config.maxAccuracyM) return false
     if (sample.speedAccuracyKmh != null && sample.speedAccuracyKmh > config.maxSpeedAccuracyKmh) return false

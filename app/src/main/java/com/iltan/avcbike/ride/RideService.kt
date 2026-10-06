@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.location.Location
 import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
@@ -61,6 +62,8 @@ class RideService : Service() {
   private var lastNotifiedMs = 0L
   private var lastMovingMs = 0L
   private var lostFixJob: Job? = null
+  /** Debug builds only, see [RideLog]. */
+  private var log: RideLog? = null
 
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(AppLanguage.wrap(base))
@@ -70,6 +73,7 @@ class RideService : Service() {
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     if (intent?.action == ACTION_STOP) {
+      log?.event("stop", "stop button")
       stopSelf()
       return START_NOT_STICKY
     }
@@ -98,6 +102,7 @@ class RideService : Service() {
       return
     }
     running = true
+    if (BuildConfig.DEBUG) log = RideLog(this).also { it.watchSatellites() }
 
     volume = VolumeController(SystemMusicVolume(getSystemService(AudioManager::class.java)), scope, PrefsQuietMemory(this))
     machine.reset()
@@ -108,10 +113,16 @@ class RideService : Service() {
       SettingsRepository(this@RideService).settings.collect {
         settings = it
         machine.config = it.toSpeedConfig()
+        log?.settings(it)
         publish()
       }
     }
-    scope.launch { volume.level.collect { level -> RideSession.update { it.copy(volumeLevel = level) } } }
+    scope.launch {
+      volume.level.collect { level ->
+        RideSession.update { it.copy(volumeLevel = level) }
+        log?.volume(level)
+      }
+    }
     lastMovingMs = SystemClock.elapsedRealtime()
     scope.launch { watchForIdleRide() }
     if (BuildConfig.DEBUG) scope.launch { runSimulator() }
@@ -122,15 +133,23 @@ class RideService : Service() {
   /** If fused location fails (Play services broken or missing parts), falls back to plain GPS. */
   private fun startSpeedSource(source: SpeedSource) {
     speedSource = source
+    log?.event("source", source::class.java.simpleName)
     source.start(
-      onSample = { sample -> if (RideSession.simulatedSpeedKmh.value == null) onSample(sample) },
+      onLocation = { location -> if (RideSession.simulatedSpeedKmh.value == null) onLocation(location) },
       onFailed = {
         if (running && speedSource === source && source is FusedSpeedSource) {
           Log.w(TAG, "Falling back to GPS")
+          log?.event("fallback", "fused location failed")
           startSpeedSource(GpsSpeedSource(this))
         }
       },
     )
+  }
+
+  private fun onLocation(location: Location) {
+    val sample = location.toSpeedSample()
+    if (sample != null) onSample(sample)
+    log?.reading(location, used = sample?.let(machine::isUsable), smoothedKmh = machine.smoothedKmh, state = machine.state, volume = volume.level.value)
   }
 
   private fun onSample(sample: SpeedSample) {
@@ -148,6 +167,7 @@ class RideService : Service() {
     if (state == appliedState) return
     appliedState = state
     Log.d(TAG, "State -> $state")
+    log?.state(state, machine.smoothedKmh)
     when (state) {
       RideState.QUIET -> volume.quiet(settings.quietVolumePercent, settings.fadeMs)
       RideState.CRUISING -> volume.restore(settings.fadeMs)
@@ -173,6 +193,7 @@ class RideService : Service() {
     lostFixJob =
       scope.launch {
         delay(LOST_FIX_MS)
+        log?.event("lost-fix", "no reading for ${LOST_FIX_MS / 1000} s")
         RideSession.update { it.copy(speedKmh = null) }
         publish(force = true)
       }
@@ -184,6 +205,7 @@ class RideService : Service() {
       delay(IDLE_CHECK_MS)
       if (SystemClock.elapsedRealtime() - lastMovingMs >= AUTO_STOP_MS) {
         Log.i(TAG, "No movement for ${AUTO_STOP_MS / 60_000} min, stopping ride")
+        log?.event("auto-stop", "no movement for ${AUTO_STOP_MS / 60_000} min")
         notifyAutoStopped()
         stopSelf()
         return
@@ -278,6 +300,8 @@ class RideService : Service() {
       running = false
       Log.i(TAG, "Ride stopped")
     }
+    log?.close()
+    log = null
     RideSession.update { RideStatus() }
     RideSession.simulatedSpeedKmh.value = null
     scope.cancel()

@@ -14,6 +14,15 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Debug builds show a speed simulator on the ride screen, so you can test at a desk.
 
+Debug builds also log every ride to a CSV file on the phone: each GPS reading (position, speed,
+accuracy, satellites), time to first fix, state changes and volume steps. Use it to check how GPS
+behaves on real rides. Release builds don't contain this code. To copy the logs to the computer:
+
+```bash
+adb shell run-as com.iltan.avcbike ls files/ride-logs
+adb exec-out run-as com.iltan.avcbike cat files/ride-logs/<name>.csv > <name>.csv
+```
+
 ## Release builds
 
 Release builds are shrunk with R8 and signed with your own **upload key**. Google Play re-signs the

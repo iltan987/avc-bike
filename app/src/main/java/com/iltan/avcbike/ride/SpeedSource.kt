@@ -18,10 +18,13 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.iltan.avcbike.speed.SpeedSample
 
-/** Where a ride's speed readings come from. Readings arrive on the main thread. */
+/** Where a ride's location readings come from. Readings arrive on the main thread. */
 interface SpeedSource {
-  /** Starts readings. [onFailed] is called if this source turns out not to work on the phone. */
-  fun start(onSample: (SpeedSample) -> Unit, onFailed: () -> Unit)
+  /**
+   * Starts readings, including ones without a speed (see [toSpeedSample]). [onFailed] is called if
+   * this source turns out not to work on the phone.
+   */
+  fun start(onLocation: (Location) -> Unit, onFailed: () -> Unit)
 
   fun stop()
 
@@ -41,7 +44,8 @@ fun hasPlayServices(context: Context): Boolean =
 /** 1 Hz: fast enough to notice pulling away from a light within a couple of seconds. */
 private const val INTERVAL_MS = 1_000L
 
-private fun Location.toSpeedSample(): SpeedSample? {
+/** Null for a reading without a speed, which some fixes lack (often the first ones). */
+fun Location.toSpeedSample(): SpeedSample? {
   if (!hasSpeed()) return null
   return SpeedSample(
     timeMs = elapsedRealtimeNanos / 1_000_000,
@@ -53,17 +57,17 @@ private fun Location.toSpeedSample(): SpeedSample? {
 
 class FusedSpeedSource(context: Context) : SpeedSource {
   private val client = LocationServices.getFusedLocationProviderClient(context)
-  private var onSample: (SpeedSample) -> Unit = {}
+  private var onLocation: (Location) -> Unit = {}
   private val callback =
     object : LocationCallback() {
       override fun onLocationResult(result: LocationResult) {
-        result.locations.forEach { location -> location.toSpeedSample()?.let(onSample) }
+        result.locations.forEach { location -> onLocation(location) }
       }
     }
 
   @SuppressLint("MissingPermission") // RideService checks it before starting.
-  override fun start(onSample: (SpeedSample) -> Unit, onFailed: () -> Unit) {
-    this.onSample = onSample
+  override fun start(onLocation: (Location) -> Unit, onFailed: () -> Unit) {
+    this.onLocation = onLocation
     client.requestLocationUpdates(locationRequest(), callback, Looper.getMainLooper()).addOnFailureListener { error ->
       Log.w(TAG, "Fused location failed", error)
       onFailed()
@@ -83,13 +87,13 @@ class FusedSpeedSource(context: Context) : SpeedSource {
 /** The phone's GPS chip directly, for phones without Play services or where fused location fails. */
 class GpsSpeedSource(context: Context) : SpeedSource {
   private val manager = context.getSystemService(LocationManager::class.java)
-  private var onSample: (SpeedSample) -> Unit = {}
+  private var onLocation: (Location) -> Unit = {}
   // The compat listener fills in the callbacks that Android 10 and older require.
-  private val listener = LocationListenerCompat { location -> location.toSpeedSample()?.let(onSample) }
+  private val listener = LocationListenerCompat { location -> onLocation(location) }
 
   @SuppressLint("MissingPermission") // RideService checks it before starting.
-  override fun start(onSample: (SpeedSample) -> Unit, onFailed: () -> Unit) {
-    this.onSample = onSample
+  override fun start(onLocation: (Location) -> Unit, onFailed: () -> Unit) {
+    this.onLocation = onLocation
     if (LocationManager.GPS_PROVIDER !in manager.allProviders) {
       Log.w(TAG, "This phone has no GPS")
       onFailed()
